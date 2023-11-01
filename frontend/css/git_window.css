@@ -12,7 +12,6 @@
     transition: all 0.4s;
     visibility: hidden;
     opacity: 0;
-
 }
 .content {
     position: absolute;
@@ -27,6 +26,7 @@
     visibility: visible;
     opacity: 1;
 }
+
 .box-close {
     font-weight: bold;
     position: absolute;
@@ -39,7 +39,6 @@
 }
 
 .box-close:hover {
-    background-color: rgba(143, 0, 0, 0.24);
     border-radius: 45px;
 }
 
