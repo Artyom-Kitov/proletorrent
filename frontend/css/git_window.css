@@ -1,0 +1,59 @@
+.modal {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.29);
+    backdrop-filter: blur(3px);
+    transition: all 0.4s;
+    visibility: hidden;
+    opacity: 0;
+
+}
+.content {
+    position: absolute;
+    background: white;
+    width: 600px;
+    padding: 1em 2em;
+    border-radius: 15px;
+    font-family: Courier New, serif;
+    text-align: center;
+}
+.modal:target {
+    visibility: visible;
+    opacity: 1;
+}
+.box-close {
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #d00000;
+    text-decoration: none;
+    font-size: 30px;
+    line-height: 20px;
+}
+
+.box-close:hover {
+    background-color: rgba(143, 0, 0, 0.24);
+    border-radius: 45px;
+}
+
+.modal_title{
+    color: #8F0000;
+    text-transform: uppercase;
+}
+
+.git_link:hover{
+    color: #8F0000;
+    cursor: pointer;
+}
+
+.star {
+    height: 80px;
+    width: 80px;
+}

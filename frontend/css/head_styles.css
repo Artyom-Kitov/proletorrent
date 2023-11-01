@@ -1,0 +1,77 @@
+.header {
+    width: auto;
+    height: 96px;
+    background: linear-gradient(180deg, #8F0000 0%, #d00000 100%);
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+
+.header_main{
+    display: flex;
+    flex-direction: column;
+    margin-left: 13px;
+    flex-basis: 90%;
+}
+
+.logo_head {
+    height: 80px;
+    width: 80px;
+    margin-left: 26px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    filter: invert(84%) sepia(40%) saturate(2347%) hue-rotate(358deg) brightness(103%) contrast(103%);
+}
+
+.proletorrent {
+
+    font-family: 'Saira Stencil One', sans-serif;
+    font-size: 42px;
+    font-style: normal;
+    font-weight: 300;
+    margin-top: 3px;
+}
+
+.prole {
+    color: #FBFF2C;
+}
+
+.torrent {
+    color: #FFF8BA;
+}
+
+.quote {
+    color: #FFD600;
+    font-family: Courier New, serif;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 700;
+    letter-spacing: -0.96px;
+    margin-top: -10px;
+}
+
+.git_btn {
+    height: 50px;
+    width: 50px;
+    margin-right: 26px;
+    cursor: pointer;
+    border-radius: 45px;
+}
+
+.git_btn:hover {
+    background: rgba(255, 250, 151, 0.25);
+    border-radius: 45px;
+}
+
+.git_logo {
+    display: block;
+    margin: 5px auto;
+    height: 40px;
+    width: 40px;
+    filter: invert(84%) sepia(40%) saturate(2347%) hue-rotate(358deg) brightness(103%) contrast(103%);
+}
+
+.btn_container {
+    display: flex;
+    align-items: center;
+}
