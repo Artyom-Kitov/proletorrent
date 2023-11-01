@@ -39,6 +39,7 @@
 }
 
 .box-close:hover {
+    background-color: rgba(143, 0, 0, 0.14);
     border-radius: 45px;
 }
 
