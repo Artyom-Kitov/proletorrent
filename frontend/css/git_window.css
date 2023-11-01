@@ -48,9 +48,17 @@
     text-transform: uppercase;
 }
 
+.git_link{
+    text-decoration: none;
+    background-color: rgba(211, 211, 211, 0.28);
+    border-radius: 5px;
+    padding: 0 5px 0 5px;
+}
+
 .git_link:hover{
     color: #8F0000;
     cursor: pointer;
+    background-color: rgba(143, 0, 0, 0.14);
 }
 
 .star {
