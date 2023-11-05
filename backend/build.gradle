@@ -32,6 +32,9 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
+	/* Apache Commons IO */
+	implementation group: 'commons-io', name: 'commons-io', version: '2.6'
+
 	/* JUnit */
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
