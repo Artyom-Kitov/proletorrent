@@ -1,0 +1,6 @@
+spring:
+  data:
+    mongodb:
+      username: back
+      password: back
+      uri: mongodb://localhost:27017/db
