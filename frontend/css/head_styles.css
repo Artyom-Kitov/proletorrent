@@ -24,7 +24,7 @@
 }
 
 .proletorrent {
-
+    cursor: default;
     font-family: 'Saira Stencil One', sans-serif;
     font-size: 42px;
     font-style: normal;
@@ -41,6 +41,7 @@
 }
 
 .quote {
+    cursor: default;
     color: #FFD600;
     font-family: Courier New, serif;
     font-size: 24px;

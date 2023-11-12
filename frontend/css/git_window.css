@@ -16,7 +16,7 @@
 .content {
     position: absolute;
     background: white;
-    width: 600px;
+    width: 40%;
     padding: 1em 2em;
     border-radius: 15px;
     font-family: Courier New, serif;
@@ -44,18 +44,19 @@
 }
 
 .modal_title{
+    cursor: default;
     color: #8F0000;
     text-transform: uppercase;
 }
 
 .git_link{
-    text-decoration: none;
-    background-color: rgba(211, 211, 211, 0.28);
-    border-radius: 5px;
-    padding: 0 5px 0 5px;
+    color: black;
+    border-radius: 10px;
+    padding: 0 15px 0 15px;
 }
 
 .git_link:hover{
+    text-decoration: none;
     color: #8F0000;
     cursor: pointer;
     background-color: rgba(143, 0, 0, 0.14);
