@@ -56,7 +56,10 @@ public class TorrentParser {
             t.setFileList(parseFileList(infoDictionary));
             t.setCommentary(parseComment(torrentDictionary));
             t.setAuthor(parseCreatorName(torrentDictionary));
-            t.setDateOfCreation(parseCreationDate(torrentDictionary));
+            try {
+                t.setDateOfCreation(parseCreationDate(torrentDictionary));
+            } catch (NumberFormatException ignore) {
+            }
             t.setAnnounceList(parseAnnounceList(torrentDictionary));
             t.setTotalSize(parseSingleFileTotalSize(infoDictionary));
 
