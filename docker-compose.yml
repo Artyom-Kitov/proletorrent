@@ -1,0 +1,34 @@
+version: '3'
+services:
+  proletorrent-back:
+    container_name: proletorrent-back
+    image: proletorrent-back:0.0.1
+    build:
+      context: backend/.
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - proletorrent-db
+    networks:
+      proletorrent-network:
+        ipv4_address: 30.0.0.2
+
+  proletorrent-db:
+    container_name: proletorrent-db
+    image: mongo:6-jammy
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=back
+      - MONGO_INITDB_ROOT_PASSWORD=back
+    ports:
+      - "27017:27017"
+    networks:
+      proletorrent-network:
+        ipv4_address: 30.0.0.3
+
+networks:
+  proletorrent-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 30.0.0.0/24
