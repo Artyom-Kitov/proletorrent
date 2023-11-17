@@ -1,3 +1,10 @@
+server:
+  port: 8080
+torrent:
+  peer-id:
+    prefix: -PR0001-
+    suffix-length: 12
+
 spring:
   data:
     mongodb:

@@ -1,7 +1,6 @@
 package ru.nsu.ooad.proletorrent.dto;
 
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 
 import java.util.ArrayList;

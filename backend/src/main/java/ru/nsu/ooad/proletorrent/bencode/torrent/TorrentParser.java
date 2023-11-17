@@ -56,10 +56,7 @@ public class TorrentParser {
             t.setFileList(parseFileList(infoDictionary));
             t.setCommentary(parseComment(torrentDictionary));
             t.setAuthor(parseCreatorName(torrentDictionary));
-            try {
-                t.setDateOfCreation(parseCreationDate(torrentDictionary));
-            } catch (NumberFormatException ignore) {
-            }
+            t.setDateOfCreation(parseCreationDate(torrentDictionary));
             t.setAnnounceList(parseAnnounceList(torrentDictionary));
             t.setTotalSize(parseSingleFileTotalSize(infoDictionary));
 
@@ -102,8 +99,10 @@ public class TorrentParser {
      */
     private static Date parseCreationDate(BencodeDictionary dictionary)
     {
-        if (null != dictionary.find(new BencodeString("creation date")))
-            return new Date(Long.parseLong(dictionary.find(new BencodeString("creation date")).toString()));
+        if (null != dictionary.find(new BencodeString("creation date"))) {
+            BencodeInteger date = (BencodeInteger) dictionary.find(new BencodeString("creation date"));
+            return new Date(date.getValue() * 1000);
+        }
         return null;
     }
 
