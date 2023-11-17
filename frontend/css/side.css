@@ -1,0 +1,104 @@
+.sidebar {
+    border-radius: 10px;
+    margin: 0 0 5px 5px;
+    padding: 0 5px;
+    flex-basis: 10%;
+    display: flex;
+    flex-direction: column;
+}
+
+.add_btn_container{
+    display: flex;
+    align-self: center;
+}
+
+.add_btn_light,.add_btn_dark {
+    width: 160px;
+    height: 50px;
+    border-radius: 26px;
+    margin-bottom: 15px;
+    margin-left: 10px;
+
+    cursor: pointer;
+
+    border: 3px solid #F00;
+    box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
+    color: #DB0000;
+
+    font-family: Arial, serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 121.1%; /* 24.22px */
+    letter-spacing: -0.3px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.add_btn_light {
+    background: #FFF;
+}
+
+.add_btn_dark {
+    background: #393939;
+}
+
+.add_btn_light:hover {
+    background-color: #ffe2e2;
+}
+
+.add_btn_dark:hover {
+    background-color: #463d3d;
+}
+
+.add_pic {
+    height: 30px;
+    width: 30px;
+    filter: invert(9%) sepia(100%) saturate(6831%) hue-rotate(8deg) brightness(93%) contrast(113%);
+}
+
+.big_logo {
+    position: absolute;
+    z-index: -1;
+    width: 350px;
+    height: 350px;
+    filter: invert(11%) sepia(96%) saturate(3863%) hue-rotate(357deg) brightness(80%) contrast(116%);
+}
+
+.pic_container {
+    flex-basis: 55%;
+}
+
+.settings_btn {
+    margin: 10px 10px 0 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+}
+
+.settings_btn:hover {
+    cursor: pointer;
+    background: rgba(255, 250, 151, 0.20);
+    border-radius: 10px;
+}
+
+.settings_pic {
+    width: 30px;
+    height: 30px;
+    filter: invert(86%) sepia(38%) saturate(3641%) hue-rotate(358deg) brightness(106%) contrast(105%);
+    margin-right: 5px;
+}
+
+.settings_text {
+    color: #FFD600;
+
+    font-family: Arial, serif;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 100%;
+    letter-spacing: -0.3px;
+}

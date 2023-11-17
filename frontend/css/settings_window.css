@@ -1,0 +1,27 @@
+.settings_content {
+    position: absolute;
+    background: white;
+    width: 40%;
+    padding: 1em 2em;
+    border-radius: 15px;
+    font-family: Courier New, serif;
+    text-align: left;
+}
+
+.settings_header {
+    margin: 0 0 30px 0;
+    text-align: center;
+    color: #8F0000;
+}
+
+.theme_container {
+    margin: 20px;
+    display: flex;
+}
+
+.feedback {
+    display: flex;
+    justify-content: center;
+    color: #8F0000;
+    border-radius: 10px;
+}
