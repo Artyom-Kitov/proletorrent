@@ -2,20 +2,18 @@ package ru.nsu.ooad.proletorrent.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.DecoderException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentFile;
 import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentInfo;
 import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentParser;
-import ru.nsu.ooad.proletorrent.dto.FileInfoResponse;
 import ru.nsu.ooad.proletorrent.dto.TorrentFileTreeNode;
+import ru.nsu.ooad.proletorrent.dto.UploadStatusResponse;
 import ru.nsu.ooad.proletorrent.service.TorrentInfoService;
+import ru.nsu.ooad.proletorrent.service.TorrentService;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -24,11 +22,21 @@ import java.util.List;
 public class TorrentController {
 
     private final TorrentInfoService torrentInfoService;
+    private final TorrentService torrentService;
 
     @PostMapping("/info")
-    public ResponseEntity<TorrentFileTreeNode> getTorrentFileInfo(@RequestParam("torrent") MultipartFile torrent) throws IOException {
-        TorrentInfo torrentInfo = TorrentParser.parseTorrent(torrent.getInputStream());
-        return ResponseEntity.ok(torrentInfoService.getTorrentFileStructure(torrentInfo));
+    public ResponseEntity<TorrentFileTreeNode> getTorrentFileInfo(
+            @RequestParam("torrent") MultipartFile torrent) throws IOException {
+        TorrentInfo metaInfo = TorrentParser.parseTorrent(torrent.getInputStream());
+        return ResponseEntity.ok(torrentInfoService.getTorrentFileStructure(metaInfo));
+    }
+
+    @PostMapping("/start-upload")
+    public ResponseEntity<UploadStatusResponse> startUpload(
+            @RequestParam("torrent") MultipartFile torrent) throws IOException, DecoderException {
+        TorrentInfo metaInfo = TorrentParser.parseTorrent(torrent.getInputStream());
+        torrentService.startUpload(metaInfo);
+        return ResponseEntity.ok(new UploadStatusResponse("upload started"));
     }
 
 }

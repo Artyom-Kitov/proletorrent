@@ -6,7 +6,6 @@ import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentInfo;
 import ru.nsu.ooad.proletorrent.dto.TorrentFileTreeNode;
 import ru.nsu.ooad.proletorrent.service.TorrentInfoService;
 
-import java.util.Comparator;
 import java.util.List;
 
 @Service
