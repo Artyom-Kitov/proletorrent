@@ -1,22 +1,33 @@
+<script setup>
+  import { useI18n } from 'vue-i18n'
+
+  const { t, locale } = useI18n({useScope: 'global'});
+
+  const switchLang = () => {
+    locale.value === 'ru' ? locale.value = 'en' : locale.value = 'ru'
+  }
+</script>
 <script>
   import HeaderComponent from "@/components/HeaderComponent.vue";
   import Tab from "@/components/Tab.vue"
+  import Table from "@/components/Table.vue"
+
   export default {
     components: {
-      HeaderComponent, Tab
+      HeaderComponent, Tab, Table
     },
     data() {
       return {
         selectedArr: [true, false, false, false],
-        theme: true
+        theme: true,
+        files: [
+          {id:44, name:"bible", size:68198, progress:100, status:"sharing", date:"06/06/2023"}
+        ]
       }
     },
     methods: {
-      falseAll() {
-        this.selectedArr = this.selectedArr.map(e => false);
-      },
       select(num){
-        this.falseAll();
+        this.selectedArr = this.selectedArr.map(e => false);
         this.selectedArr[num] = true;
       },
       changeTheme(){
@@ -34,31 +45,34 @@
   <main>
     <div class="container">
       <div class="sidebar">
-        <div class="add_btn_container"><button class="add_btn_light">
+        <div class="add_btn_container">
+          <button class="add_btn_light">
           <img class="add_pic" src="../imgs/plus_icon.svg" alt="">
-          добавить
+            {{ $t('add-button') }}
         </button>
         </div>
         <Tab @click="select(0)" v-bind:is-selected="selectedArr[0]" v-bind:theme="this.theme">
           <img class="img" src="../imgs/tab_icons/all.svg" alt="" :class="[this.selectedArr[0] ? 'img_clicked' : 'img']">
-          все
+          {{ $t('tabs.all') }}
         </Tab>
         <Tab @click="select(1)" v-bind:is-selected="selectedArr[1]" v-bind:theme="this.theme">
           <img class="img" src="../imgs/tab_icons/down.svg" alt="" :class="[this.selectedArr[1] ? 'img_clicked' : 'img']">
-          скачиваются
+          {{ $t('tabs.downloading') }}
         </Tab>
         <Tab @click="select(2)" v-bind:is-selected="selectedArr[2]" v-bind:theme="this.theme">
           <img class="img" src="../imgs/tab_icons/share.svg" alt="" :class="[this.selectedArr[2] ? 'img_clicked' : 'img']">
-          раздаются
+          {{ $t('tabs.sharing') }}
         </Tab>
         <Tab @click="select(3)" v-bind:is-selected="selectedArr[3]" v-bind:theme="this.theme">
           <img class="img" src="../imgs/tab_icons/paused.svg" alt="" :class="[this.selectedArr[3] ? 'img_clicked' : 'img']">
-          простаивают
+          {{ $t('tabs.paused') }}
         </Tab>
         <div class="pic_container"><img class="big_logo" src="../imgs/logo512q.svg" alt=""></div>
         <a href="#settings" class="settings_btn">
           <img class="settings_pic" src="../imgs/customize.svg" alt="">
-          <div class="settings_text">настройки</div>
+          <div class="settings_text">
+            {{ $t('settings-button') }}
+          </div>
         </a>
       </div>
 
@@ -66,43 +80,54 @@
         <div id="about" class="modal">
           <div class="content">
             <img class="star" src="../imgs/star.png" alt="star">
-            <h2 class="modal_title">☆Оцените труд работяг звездой на Github!☆</h2>
-            <a class="git_link" href="https://github.com/Artyom-Kitov/proletorrent" target="_blank">
-              Посеить репозиторий
+            <h2 class="modal_title">☆{{ $t('git-modal.message') }}☆</h2>
+            <a class="git_link" href="https://github.com/Artyom-Kitov/proletorrent" onClick="window.open('https://ru.wikipedia.org/wiki/SOCKS'); return true;" target="_blank">
+              {{ $t('git-modal.git-link') }}
             </a>
             <a href="#" class="box-close">×</a>
           </div>
         </div>
 
+
         <div id="settings" class="modal">
           <div class="settings_content">
-            <h2 class="settings_header">Параметры</h2>
+            <h2 class="settings_header">{{ $t('settings-modal.settings-title') }}</h2>
             <div class="theme_container">
-              Тема приложения:
+              {{ $t('settings-modal.theme-toggle') }}
               <div>
                 *toggle*
               </div>
             </div>
             <div class="theme_container">
-              Язык приложения:
+              {{ $t('settings-modal.lang-toggle') }}
               <div>
-                *toggle*
+                <button @click="switchLang">click</button>
               </div>
             </div>
             <div class="feedback">
-              <a class="feedback" href="mailto:e.syroezhkin@g.nsu.ru">Сообщите о проблемах или предложениях!</a>
+              <a class="feedback" href="mailto:e.syroezhkin@g.nsu.ru;a.kitov@g.nsu.ru" >
+                {{ $t('settings-modal.feedback-link') }}
+              </a>
             </div>
 
             <a href="#" class="box-close">×</a>
           </div>
         </div>
 
-        <div class="container">
-          {{selectedArr}}
-          <div v-if="selectedArr[0]">табличка со всем</div>
-          <div v-if="selectedArr[1]">табличка с скачками</div>
-          <div v-if="selectedArr[2]">табличка с раздачами</div>
-          <div v-if="selectedArr[3]">табличка с простойкой</div>
+<!--        <div class="container">-->
+
+<!--        </div>-->
+        <div v-if="selectedArr[0]" class="container">
+          <Table :files="files" :filter="'all'"></Table>
+        </div>
+        <div v-if="selectedArr[1]" class="container">
+          <Table :files="files" :filter="'downloading'"></Table>
+        </div>
+        <div v-if="selectedArr[2]" class="container">
+          <Table :files="files" :filter="'sharing'"></Table>
+        </div>
+        <div v-if="selectedArr[3]" class="container">
+          <Table :files="files" :filter="'paused'"></Table>
         </div>
 
 

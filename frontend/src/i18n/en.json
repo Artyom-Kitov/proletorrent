@@ -1,0 +1,33 @@
+{
+  "quote":"Workers of the world, seed!",
+  "tabs": {
+    "all": "all",
+    "downloading": "downloading",
+    "sharing": "seeding",
+    "paused": "paused"
+  },
+  "add-button": "add",
+  "settings-button": "settings",
+  "git-modal": {
+    "message": "Rate our work with a star on Github!",
+    "git-link": "Visit repositories"
+  },
+  "settings-modal": {
+    "settings-title": "Settings",
+    "theme-toggle": "App theme",
+    "lang-toggle": "App language",
+    "feedback-link": "Tell us about problems or suggestions!"
+  },
+  "status": {
+    "downloading": "Downloading",
+    "sharing": "Seeding",
+    "paused": "Paused"
+  },
+  "table-header": {
+    "name": "file name",
+    "size":"size",
+    "progress": "progress",
+    "status": "status",
+    "date": "date of creation"
+  }
+}

@@ -3,7 +3,7 @@
     <img class="logo_head" src="../../imgs/logo_small.svg" alt="logo">
     <div class="header_main">
       <div class="proletorrent"><span class="prole">PROLE</span><span class="torrent">TORRENT</span></div>
-      <p class="quote">Пролетарии всех стран, раздавайте!</p>
+      <p class="quote">{{ $t('quote') }}</p>
     </div>
     <div class="btn_container">
       <div class="git_btn">
