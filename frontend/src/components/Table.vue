@@ -1,10 +1,5 @@
 <script>
 export default {
-  data() {
-    return {
-      map: map
-    }
-  },
   props: {
     files: {
       type: Array,
@@ -51,9 +46,24 @@ export default {
     </th>
   </tr>
   <tr :class="(index % 2 === 0) ? 'tr_odd_light' : ''" v-for="(file, index) in files" v-show="(file.status === this.filter) || (this.filter === 'all')" >
-    <td>{{ index+1 }}</td><td class="name_cell">{{ file.name }}</td><td>{{ this.formatBytes(file.size, 2) }}</td>
-    <td>{{file.progress}}%<progress class="progress" max="100" :value="file.progress"></progress></td>
-    <td>{{ $t('status.'.concat(file.status)) }}</td><td>{{ file.date }}</td>
+    <td>
+      {{ index+1 }}
+    </td>
+    <td class="name_cell">
+      {{ file.name }}
+    </td>
+    <td>
+      {{ this.formatBytes(file.size, 2) }}
+    </td>
+    <td>
+      {{file.progress}}%<progress class="progress" max="100" :value="file.progress"></progress>
+    </td>
+    <td>
+      {{ $t('status.'.concat(file.status)) }}
+    </td>
+    <td>
+      {{ file.date }}
+    </td>
   </tr>
 </table>
 </template>

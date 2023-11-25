@@ -4,7 +4,14 @@
   const { t, locale } = useI18n({useScope: 'global'});
 
   const switchLang = () => {
-    locale.value === 'ru' ? locale.value = 'en' : locale.value = 'ru'
+    let e = document.getElementById('lang');
+    let val = e.options[e.selectedIndex].text;
+    console.log(val);
+    val === t('language.ru') ? locale.value = 'ru' : locale.value = 'en'
+  }
+
+  function onChange(event) {
+    switchLang();
   }
 </script>
 <script>
@@ -93,15 +100,20 @@
           <div class="settings_content">
             <h2 class="settings_header">{{ $t('settings-modal.settings-title') }}</h2>
             <div class="theme_container">
-              {{ $t('settings-modal.theme-toggle') }}
+              <img class="settings_icon" src="../imgs/brush.svg" alt="">
+              {{ $t('settings-modal.theme-toggle') }}:
               <div>
                 *toggle*
               </div>
             </div>
             <div class="theme_container">
-              {{ $t('settings-modal.lang-toggle') }}
+              <img class="settings_icon" src="../imgs/globe.svg" alt="">
+              {{ $t('settings-modal.lang-toggle') }}:
               <div>
-                <button @click="switchLang">click</button>
+                <select id="lang" class="lang_select" @change="switchLang">
+                  <option>{{ $t('language.ru') }}</option>
+                  <option>{{ $t('language.en') }}</option>
+                </select>
               </div>
             </div>
             <div class="feedback">
@@ -114,9 +126,6 @@
           </div>
         </div>
 
-<!--        <div class="container">-->
-
-<!--        </div>-->
         <div v-if="selectedArr[0]" class="container">
           <Table :files="files" :filter="'all'"></Table>
         </div>

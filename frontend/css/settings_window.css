@@ -17,6 +17,7 @@
 .theme_container {
     margin: 20px;
     display: flex;
+    align-items: center;
 }
 
 .feedback {
@@ -24,4 +25,23 @@
     justify-content: center;
     color: #8F0000;
     border-radius: 10px;
+}
+
+.settings_icon {
+    height: 32px;
+    width: 32px;
+    margin-right: 5px;
+    filter: invert(9%) sepia(100%) saturate(6831%) hue-rotate(8deg) brightness(93%) contrast(113%);
+}
+
+.lang_select {
+    margin: 0 10px 0 10px;
+    height: 30px;
+    width: 150px;
+    background-color: white;
+    border-radius: 10px;
+    border: 2px solid #c70000;
+    text-align: center;
+    font-family: Courier New, serif;
+    font-weight: bold;
 }

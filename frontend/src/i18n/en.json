@@ -29,5 +29,9 @@
     "progress": "progress",
     "status": "status",
     "date": "date of creation"
+  },
+  "language": {
+    "ru": "Russian",
+    "en": "English"
   }
 }
