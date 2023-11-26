@@ -1,13 +1,20 @@
 <script setup>
-  import { useI18n } from 'vue-i18n'
+  import { useI18n } from 'vue-i18n';
+  import { useDark, useToggle } from '@vueuse/core';
 
   const { t, locale } = useI18n({useScope: 'global'});
+  const isDark = useDark();
+  const toggleDark = useToggle(isDark);
 
+  //alert((locale.value === 'ru'));
+  let ruEnabled = (locale.value === 'ru');
   const switchLang = () => {
     let e = document.getElementById('lang');
-    let val = e.options[e.selectedIndex].text;
-    console.log(val);
-    val === t('language.ru') ? locale.value = 'ru' : locale.value = 'en'
+    locale.value = e.options[e.selectedIndex].value;
+    //val === 'ru' ? locale.value = 'ru' : locale.value = 'en';
+    ruEnabled = (locale.value === 'ru');
+    document.cookie = "lang=".concat(locale.value);
+    //alert(locale.value)
   }
 
   function onChange(event) {
@@ -28,17 +35,17 @@
         selectedArr: [true, false, false, false],
         theme: true,
         files: [
-          {id:44, name:"bible", size:68198, progress:100, status:"sharing", date:"06/06/2023"}
+          {id:'aaa', name:"bible", size:68198, progress:100, status:1, date:"06/06/2023"},
+          {id:'a2a', name:"bible", size:68198, progress:100, status:0, date:"06/06/2023"},
+          {id:'a3a', name:"bible", size:68198, progress:100, status:2, date:"06/06/2023"},
+          {id:'a4a', name:"bible", size:68198, progress:100, status:0, date:"06/06/2023"}
         ]
       }
     },
     methods: {
       select(num){
-        this.selectedArr = this.selectedArr.map(e => false);
+        this.selectedArr = this.selectedArr.map(() => false);
         this.selectedArr[num] = true;
-      },
-      changeTheme(){
-        this.theme = !this.theme;
       }
     }
   }
@@ -83,7 +90,7 @@
         </a>
       </div>
 
-      <div class="main_light">
+      <div :class="'main'.concat(isDark ? '-dark' : '')">
         <div id="about" class="modal">
           <div class="content">
             <img class="star" src="../imgs/star.png" alt="star">
@@ -103,7 +110,7 @@
               <img class="settings_icon" src="../imgs/brush.svg" alt="">
               {{ $t('settings-modal.theme-toggle') }}:
               <div>
-                *toggle*
+                <button @click="toggleDark()">{{ isDark ? 'dark' : 'light' }}</button>
               </div>
             </div>
             <div class="theme_container">
@@ -111,8 +118,8 @@
               {{ $t('settings-modal.lang-toggle') }}:
               <div>
                 <select id="lang" class="lang_select" @change="switchLang">
-                  <option>{{ $t('language.ru') }}</option>
-                  <option>{{ $t('language.en') }}</option>
+                  <option :selected="ruEnabled" value="ru">🇷🇺 Русский</option>
+                  <option :selected="!ruEnabled" value="en">🇬🇧 English</option>
                 </select>
               </div>
             </div>
@@ -127,16 +134,16 @@
         </div>
 
         <div v-if="selectedArr[0]" class="container">
-          <Table :files="files" :filter="'all'"></Table>
+          <Table :files="files" :filter="-1"></Table>
         </div>
         <div v-if="selectedArr[1]" class="container">
-          <Table :files="files" :filter="'downloading'"></Table>
+          <Table :files="files" :filter="0"></Table>
         </div>
         <div v-if="selectedArr[2]" class="container">
-          <Table :files="files" :filter="'sharing'"></Table>
+          <Table :files="files" :filter="1"></Table>
         </div>
         <div v-if="selectedArr[3]" class="container">
-          <Table :files="files" :filter="'paused'"></Table>
+          <Table :files="files" :filter="2"></Table>
         </div>
 
 
@@ -151,7 +158,6 @@
 @import "/css/head_styles.css";
 @import "/css/git_window.css";
 @import "/css/settings_window.css";
-@import "/css/git_window_dark.css";
 @import "/css/side.css";
 @import "/css/main.css";
 
@@ -163,10 +169,22 @@
   background: linear-gradient(180deg, #cf0000 9.57%, #960000 100%) fixed;
 }
 
-.container,.container_dark{
+.dark {
+  .body {
+    background: linear-gradient(180deg, #4B0000 9.57%, #A10000 100%) fixed;
+  }
+
+  .container {
+    color: white;
+  }
+}
+
+.container{
   display: flex;
   flex-direction: row;
   height: 86.8vh;
+
+  color: black;
 
   font-family: Courier New,serif;
   font-size: 16px;
@@ -174,14 +192,6 @@
   font-weight: 700;
   line-height: normal;
   
-}
-
-.container {
-  color: black;
-}
-
-.container_dark {
-  color: white;
 }
 
 .img,.img_clicked {

@@ -6,7 +6,7 @@ export default {
       //required: true
     },
     filter: {
-      type: String,
+      type: Number,
       //required: true
     }
   },
@@ -45,7 +45,7 @@ export default {
       {{ $t('table-header.date') }}
     </th>
   </tr>
-  <tr :class="(index % 2 === 0) ? 'tr_odd_light' : ''" v-for="(file, index) in files" v-show="(file.status === this.filter) || (this.filter === 'all')" >
+  <tr :class="(index % 2 === 0) ? 'tr_odd_light' : ''" v-for="(file, index) in files" v-show="(file.status === this.filter) || (this.filter === -1)" >
     <td>
       {{ index+1 }}
     </td>
@@ -76,8 +76,7 @@ export default {
 }
 
 th {
-  border: 1px solid grey;
-  color: rgb(128, 128, 128);
+  border: 1px solid #5b5b5b;
 }
 
 td,.name_cell {
@@ -97,6 +96,16 @@ progress {
 
 .tr_odd_light {
   background-color: #eaeaea;
+}
+
+.dark {
+  .tr_odd_light {
+    background-color: #2a2a2a;
+  }
+
+  .th {
+    border: 1px solid;
+  }
 }
 
 </style>

@@ -76,3 +76,25 @@
     display: flex;
     align-items: center;
 }
+
+.dark {
+    .header {
+        background: #4f0000;
+    }
+
+    .quote {
+        color: #D9B600;
+    }
+
+    .prole {
+        color: #D9B600;
+    }
+
+    .torrent {
+        color: #EAE4AB;
+    }
+
+    .git_logo {
+        filter: invert(77%) sepia(19%) saturate(6123%) hue-rotate(10deg) brightness(97%) contrast(107%);
+    }
+}
