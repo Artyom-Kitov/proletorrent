@@ -10,7 +10,6 @@ import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentInfo;
 import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentParser;
 import ru.nsu.ooad.proletorrent.dto.TorrentFileTreeNode;
 import ru.nsu.ooad.proletorrent.dto.UploadStatusResponse;
-import ru.nsu.ooad.proletorrent.service.TorrentInfoService;
 import ru.nsu.ooad.proletorrent.service.TorrentService;
 
 import java.io.IOException;
@@ -21,14 +20,13 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class TorrentController {
 
-    private final TorrentInfoService torrentInfoService;
     private final TorrentService torrentService;
 
     @PostMapping("/info")
     public ResponseEntity<TorrentFileTreeNode> getTorrentFileInfo(
             @RequestParam("torrent") MultipartFile torrent) throws IOException {
         TorrentInfo metaInfo = TorrentParser.parseTorrent(torrent.getInputStream());
-        return ResponseEntity.ok(torrentInfoService.getTorrentFileStructure(metaInfo));
+        return ResponseEntity.ok(torrentService.getTorrentFileStructure(metaInfo));
     }
 
     @PostMapping("/start-upload")

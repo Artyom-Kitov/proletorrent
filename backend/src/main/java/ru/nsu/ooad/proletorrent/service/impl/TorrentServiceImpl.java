@@ -3,18 +3,13 @@ package ru.nsu.ooad.proletorrent.service.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriComponentsBuilder;
-import ru.nsu.ooad.proletorrent.bencode.parser.Reader;
-import ru.nsu.ooad.proletorrent.bencode.parser.objects.BencodeDictionary;
-import ru.nsu.ooad.proletorrent.bencode.parser.objects.BencodeString;
+import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentFile;
 import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentInfo;
+import ru.nsu.ooad.proletorrent.dto.TorrentFileTreeNode;
 import ru.nsu.ooad.proletorrent.exception.TrackerException;
 import ru.nsu.ooad.proletorrent.service.TorrentService;
 import ru.nsu.ooad.proletorrent.torrent.AnnounceRequest;
@@ -22,11 +17,8 @@ import ru.nsu.ooad.proletorrent.torrent.AnnounceResponse;
 import ru.nsu.ooad.proletorrent.torrent.HttpTrackerManager;
 
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Random;
 
@@ -40,9 +32,28 @@ public class TorrentServiceImpl implements TorrentService {
     @Value("${torrent.peer-id.suffix-length}")
     private int suffixLength;
 
-    private static final Charset TORRENT_CHARSET = StandardCharsets.ISO_8859_1;
-
-    private final CloseableHttpClient client = HttpClients.createDefault();
+    @Override
+    public TorrentFileTreeNode getTorrentFileStructure(TorrentInfo torrent) {
+        if (torrent.isSingleFileTorrent()) {
+            return TorrentFileTreeNode.builder()
+                    .name(torrent.getName())
+                    .size(torrent.getTotalSize())
+                    .build();
+        }
+        long size = torrent.getFileList().stream()
+                .map(TorrentFile::getFileSize)
+                .reduce(Long::sum)
+                .orElseThrow();
+        TorrentFileTreeNode node = TorrentFileTreeNode.builder()
+                .name(torrent.getName())
+                .size(size)
+                .build();
+        for (TorrentFile file : torrent.getFileList()) {
+            List<String> path = file.getFileInsides();
+            node.addFile(path, file.getFileSize());
+        }
+        return node;
+    }
 
     @Override
     public void startUpload(TorrentInfo metaInfo) throws DecoderException {
@@ -69,27 +80,6 @@ public class TorrentServiceImpl implements TorrentService {
         } catch (IOException | TrackerException e) {
             throw new RuntimeException(e);
         }
-//        String uri = (metaInfo.getAnnounce().startsWith("udp") ? metaInfo.getAnnounceList().stream()
-//                .filter(e -> e.startsWith("http"))
-//                .findFirst()
-//                .orElseThrow() : metaInfo.getAnnounce())
-//                + "?port=6881"
-//                + "&info_hash=" + URLEncoder.encode(new String(infoHash, TORRENT_CHARSET), TORRENT_CHARSET)
-//                + "&peer_id=" + peerId
-//                + "&uploaded=0"
-//                + "&downloaded=0"
-//                + "&left=" + metaInfo.getTotalSize()
-//                + "&compact=1";
-
-//        HttpGet request = new HttpGet(uri);
-//        HttpResponse response = null;
-//        try {
-//            response = client.execute(request);
-//            BencodeDictionary bencodeResponse = new Reader(response.getEntity().getContent()).readDictionary();
-//            System.out.println(bencodeResponse.bencodedString());
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
     }
 
     private String generatePeerId() {

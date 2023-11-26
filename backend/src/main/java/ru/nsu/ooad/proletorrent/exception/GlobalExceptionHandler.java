@@ -10,6 +10,13 @@ import ru.nsu.ooad.proletorrent.dto.MessageResponse;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(TorrentExistsException.class)
+    public ResponseEntity<MessageResponse> torrentExistsException(TorrentExistsException e) {
+        log.error(e.getMessage());
+        return ResponseEntity.badRequest()
+                .body(new MessageResponse("torrent already exists"));
+    }
+
     @ExceptionHandler(Throwable.class)
     public ResponseEntity<MessageResponse> anyException(Throwable e) {
         log.error(e.getMessage());
