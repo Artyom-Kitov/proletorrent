@@ -1,0 +1,37 @@
+{
+  "quote":"Пролетарии всех стран, раздавайте!",
+  "tabs": {
+    "all": "все",
+    "downloading": "скачиваются",
+    "sharing": "раздаются",
+    "paused": "простаивают"
+  },
+  "add-button": "добавить",
+  "settings-button": "настройки",
+  "git-modal": {
+    "message": "Оцените труд работяг звездой на Github!",
+    "git-link": "Посетить репозитории"
+  },
+  "settings-modal": {
+    "settings-title": "Параметры",
+    "theme-toggle": "Тема приложения",
+    "lang-toggle": "Язык приложения",
+    "feedback-link": "Сообщите о проблемах или предложениях!"
+  },
+  "status": {
+    "downloading": "Скачивается",
+    "sharing": "Раздается",
+    "paused": "Простаивает"
+  },
+  "table-header": {
+    "name": "имя файла",
+    "size":"размер",
+    "progress": "прогресс",
+    "status": "статус",
+    "date": "дата добавления"
+  },
+  "language": {
+    "ru": "Русский",
+    "en": "Английский"
+  }
+}
