@@ -28,7 +28,6 @@ dependencies {
 
 	/* MongoDB */
 	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb:3.1.2'
-	implementation 'org.mongodb:mongo-java-driver:3.12.14'
 
 	/* Lombok */
 	compileOnly 'org.projectlombok:lombok'

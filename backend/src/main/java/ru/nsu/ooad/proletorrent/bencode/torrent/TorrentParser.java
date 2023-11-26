@@ -1,5 +1,6 @@
 package ru.nsu.ooad.proletorrent.bencode.torrent;
 
+import ru.nsu.ooad.proletorrent.bencode.BencodeException;
 import ru.nsu.ooad.proletorrent.bencode.parser.Reader;
 import ru.nsu.ooad.proletorrent.bencode.parser.Utils;
 import ru.nsu.ooad.proletorrent.bencode.parser.objects.*;
@@ -178,7 +179,7 @@ public class TorrentParser {
             return ((BencodeString) info.find(new BencodeString("pieces"))).getData();
         } else
         {
-            throw new Error("Info dictionary does not contain pieces bytestring!");
+            throw new BencodeException("Info dictionary does not contain pieces bytestring!");
         }
     }
 
@@ -205,12 +206,12 @@ public class TorrentParser {
                 }
             } else
             {
-                throw new Error("Error parsing SHA1 piece hashes. Bytecount was not a multiple of 20.");
+                throw new BencodeException("Error parsing SHA1 piece hashes. Bytecount was not a multiple of 20.");
             }
             return sha1HexRenders;
         } else
         {
-            throw new Error("Info dictionary does not contain pieces bytestring!");
+            throw new BencodeException("Info dictionary does not contain pieces bytestring!");
         }
     }
 

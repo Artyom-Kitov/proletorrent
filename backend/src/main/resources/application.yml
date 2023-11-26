@@ -8,6 +8,14 @@ torrent:
 spring:
   data:
     mongodb:
-      username: back
-      password: back
-      uri: mongodb://localhost:27017/db
+      uri: mongodb://back:back@localhost:27017/db?authSource=admin
+      authentication-database: admin
+      database: db
+
+validation:
+  torrent:
+    invalid: invalid-torrent-file
+    exists: torrent-already-exists
+  tracker:
+    scheme: no-supported-scheme-provided
+  unknown: internal-server-error

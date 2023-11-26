@@ -1,36 +1,66 @@
 package ru.nsu.ooad.proletorrent.service.impl;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentFile;
 import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentInfo;
 import ru.nsu.ooad.proletorrent.dto.TorrentFileTreeNode;
-import ru.nsu.ooad.proletorrent.exception.TrackerException;
+import ru.nsu.ooad.proletorrent.dto.TorrentStatusResponse;
+import ru.nsu.ooad.proletorrent.exception.TorrentException;
+import ru.nsu.ooad.proletorrent.repository.TorrentRepository;
+import ru.nsu.ooad.proletorrent.repository.document.DownloadedTorrent;
+import ru.nsu.ooad.proletorrent.service.TorrentListListener;
 import ru.nsu.ooad.proletorrent.service.TorrentService;
-import ru.nsu.ooad.proletorrent.torrent.AnnounceRequest;
-import ru.nsu.ooad.proletorrent.torrent.AnnounceResponse;
-import ru.nsu.ooad.proletorrent.torrent.HttpTrackerManager;
+import ru.nsu.ooad.proletorrent.torrent.TorrentConnection;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
-public class TorrentServiceImpl implements TorrentService {
+@RequiredArgsConstructor
+public class TorrentServiceImpl implements TorrentService, TorrentListListener {
 
     @Value("${torrent.peer-id.prefix}")
     private String peerIdPrefix;
 
     @Value("${torrent.peer-id.suffix-length}")
     private int suffixLength;
+
+    private final TorrentRepository torrentRepository;
+
+    private final ConcurrentHashMap<String, TorrentConnection> connections = new ConcurrentHashMap<>();
+
+    @Override
+    public List<TorrentStatusResponse> getStatuses() {
+        List<TorrentStatusResponse> result = new ArrayList<>();
+        Enumeration<TorrentConnection> pending = connections.elements();
+        int counter = 0;
+        for (Iterator<TorrentConnection> it = pending.asIterator(); it.hasNext(); counter++) {
+            TorrentConnection connection = it.next();
+            result.add(TorrentStatusResponse.builder()
+                    .id(counter)
+                    .name(connection.getName())
+                    .size(connection.getSize())
+                    .progress(69)
+                    .status(TorrentStatusResponse.Status.DOWNLOADING.getValue())
+                    .build());
+        }
+        List<DownloadedTorrent> downloaded = torrentRepository.findAll();
+        for (DownloadedTorrent t : downloaded) {
+            result.add(TorrentStatusResponse.builder()
+                    .id(counter)
+                    .name(t.getName())
+                    .size(t.getSize())
+                    .progress(100)
+                    .status(TorrentStatusResponse.Status.SHARING.getValue())
+                    .build());
+            counter++;
+        }
+        return result;
+    }
 
     @Override
     public TorrentFileTreeNode getTorrentFileStructure(TorrentInfo torrent) {
@@ -56,30 +86,11 @@ public class TorrentServiceImpl implements TorrentService {
     }
 
     @Override
-    public void startUpload(TorrentInfo metaInfo) throws DecoderException {
-        byte[] infoHash = Hex.decodeHex(metaInfo.getInfoHash());
+    public void startUpload(TorrentInfo metaInfo) throws TorrentException {
         String peerId = generatePeerId();
-
-        String tracker = (metaInfo.getAnnounce().startsWith("udp") ? metaInfo.getAnnounceList().stream()
-                .filter(e -> e.startsWith("http"))
-                .findFirst()
-                .orElseThrow() : metaInfo.getAnnounce());
-        try {
-            AnnounceResponse response = new HttpTrackerManager(tracker).send(AnnounceRequest.builder()
-                            .port(6881)
-                            .infoHash(infoHash)
-                            .peerId(peerId)
-                            .uploaded(0)
-                            .downloaded(0)
-                            .left(0)
-                            .compact(true)
-                            .noPeerId(false)
-                            .event(AnnounceRequest.RequestEvent.NONE)
-                            .numWant(50).build());
-            log.info(response.toString());
-        } catch (IOException | TrackerException e) {
-            throw new RuntimeException(e);
-        }
+        TorrentConnection connection = new TorrentConnection(peerId, metaInfo, this);
+        connections.put(peerId, connection);
+        new Thread(connection).start();
     }
 
     private String generatePeerId() {
@@ -91,27 +102,9 @@ public class TorrentServiceImpl implements TorrentService {
         return peerId.toString();
     }
 
-    public static String urlencode(byte[] unencodedBytes) {
-
-        StringBuilder buffer = new StringBuilder();
-
-        for (int i = 0; i < unencodedBytes.length; i++) {
-
-            if (((unencodedBytes[i] >= 'a') && (unencodedBytes[i] <= 'z'))
-                    || ((unencodedBytes[i] >= 'A') && (unencodedBytes[i] <= 'Z'))
-                    || ((unencodedBytes[i] >= '0') && (unencodedBytes[i] <= '9')) || (unencodedBytes[i] == '.')
-                    || (unencodedBytes[i] == '-') || (unencodedBytes[i] == '*') || (unencodedBytes[i] == '_')) {
-                buffer.append((char) unencodedBytes[i]);
-            } else if (unencodedBytes[i] == ' ') {
-                buffer.append('+');
-            } else {
-                buffer.append(String.format("%%%02x", unencodedBytes[i]));
-            }
-
-        }
-
-        return buffer.toString();
-
+    @Override
+    public void remove(String key) {
+        connections.remove(key);
     }
 
 }

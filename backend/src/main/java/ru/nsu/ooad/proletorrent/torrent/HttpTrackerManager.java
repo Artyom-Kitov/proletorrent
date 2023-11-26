@@ -42,25 +42,51 @@ public class HttpTrackerManager implements TrackerManager {
                 + (request.getTrackerId() == null ? "" : "&trackerid=" + request.getTrackerId());
         HttpGet trackerRequest = new HttpGet(url);
         HttpResponse response = client.execute(trackerRequest);
-        BencodeDictionary bencodeResponse = new Reader(response.getEntity().getContent()).readDictionary();
+
+        byte[] bytes = response.getEntity().getContent().readAllBytes();
+        BencodeDictionary bencodeResponse = new Reader(new String(bytes)).readDictionary();
         IBencodeObject error = bencodeResponse.find(new BencodeString("failure reason"));
         if (error != null) {
             throw new TrackerException(error.toString());
         }
 
         int interval = Math.toIntExact(((BencodeInteger) bencodeResponse.find(new BencodeString("interval"))).getValue());
-//        String trackerId = bencodeResponse.find(new BencodeString("tracker id"));
-        byte[] peersBytes = bencodeResponse.find(new BencodeString("peers")).bencode();
+
+        int start = indexOf(bytes, new byte[]{'p', 'e', 'e', 'r', 's'});
+        byte[] peersBytes = Arrays.copyOfRange(bytes, start, bytes.length);
+        String peersSubstr = new String(peersBytes);
+        int peersLength = Integer.parseInt(peersSubstr.substring(5, peersSubstr.indexOf(':')));
+        int beginIdx = peersSubstr.indexOf(':') + 1;
+
+        byte[] peersRawBytes = Arrays.copyOfRange(peersBytes, beginIdx, beginIdx + peersLength);
         List<Peer> peers = new ArrayList<>();
-        for (int i = 0; i < 6 * request.getNumWant(); i += 6) {
-            int port = ((0xFF & peersBytes[i + 4]) << 8) | (0xFF & peersBytes[i + 5]);
-            peers.add(new Peer(Inet4Address.getByAddress(Arrays.copyOfRange(peersBytes, i, i + 4)), port));
+        for (int i = 0; i < peersRawBytes.length; i += 6) {
+            byte[] addr = Arrays.copyOfRange(peersRawBytes, i, i + 6);
+            int port = ((0xFF & addr[4]) << 8) | (0xFF & addr[5]);
+            System.out.println(Arrays.toString(addr));
+            peers.add(new Peer(Inet4Address.getByAddress(Arrays.copyOfRange(addr, 0, 4)), port));
         }
         return AnnounceResponse.builder()
                 .interval(interval)
                 .peers(peers)
-//                .trackerId(trackerId)
                 .build();
+    }
+
+    private int indexOf(byte[] source, byte[] dest) {
+        int n = source.length;
+        int m = dest.length;
+        for (int i = 0; i <= n - m; i++) {
+            int j;
+            for (j = 0; j < m; j++) {
+                if (source[i + j] != dest[j]) {
+                    break;
+                }
+            }
+            if (j == m) {
+                return i;
+            }
+        }
+        return -1;
     }
 
 }

@@ -1,6 +1,7 @@
 package ru.nsu.ooad.proletorrent.bencode.parser;
 
 import org.apache.commons.io.IOUtils;
+import ru.nsu.ooad.proletorrent.bencode.BencodeException;
 import ru.nsu.ooad.proletorrent.bencode.parser.objects.*;
 
 import java.io.File;
@@ -79,7 +80,7 @@ public class Reader {
             case 'l':
                 return readList();
         }
-        throw new Error("Parser in invalid state at byte " + currentByteIndex);
+        throw new BencodeException("Parser in invalid state at byte " + currentByteIndex);
     }
 
     /**
