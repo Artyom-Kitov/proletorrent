@@ -19,9 +19,9 @@
     "feedback-link": "Tell us about problems or suggestions!"
   },
   "status": {
-    "downloading": "Downloading",
-    "sharing": "Seeding",
-    "paused": "Paused"
+    "0": "Downloading",
+    "1": "Seeding",
+    "2": "Paused"
   },
   "table-header": {
     "name": "file name",
@@ -29,9 +29,5 @@
     "progress": "progress",
     "status": "status",
     "date": "date of creation"
-  },
-  "language": {
-    "ru": "Russian",
-    "en": "English"
   }
 }

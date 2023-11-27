@@ -6,6 +6,7 @@
     border-radius: 15px;
     font-family: Courier New, serif;
     text-align: left;
+    letter-spacing: 1px;
 }
 
 .settings_header {
@@ -44,4 +45,24 @@
     text-align: center;
     font-family: Courier New, serif;
     font-weight: bold;
+}
+
+.dark {
+    .settings_content {
+        background-color: #393939;
+        color: white;
+    }
+
+    .lang_select {
+        background-color: #303030;
+        color: white;
+    }
+
+    .settings_header {
+        color: #ff3c3c;
+    }
+
+    .feedback {
+        color: #ff3c3c;
+    }
 }

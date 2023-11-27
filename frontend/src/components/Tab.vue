@@ -53,7 +53,7 @@ export default {
   cursor: pointer;
 }
 
-.tab_padding_light,.tab_padding_dark{
+.tab_padding_light{
   position: absolute;
   z-index: -1;
   height: 50px;
@@ -61,14 +61,17 @@ export default {
   border-radius: 20px;
   left: 20px;
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-}
-
-.tab_padding_light{
   background-color: white;
 }
 
-.tab_padding_dark{
-  background-color: #393939;
+.dark {
+  .tab_padding_light {
+    background-color: #393939;
+  }
+
+  .tab_clicked {
+    color: #ff3c3c;
+  }
 }
 
 

@@ -12,7 +12,7 @@
     align-self: center;
 }
 
-.add_btn_light,.add_btn_dark {
+.add_btn_light {
     width: 160px;
     height: 50px;
     border-radius: 15px;
@@ -41,16 +41,8 @@
     background: #FFF;
 }
 
-.add_btn_dark {
-    background: #393939;
-}
-
 .add_btn_light:hover {
     background-color: #ffe2e2;
-}
-
-.add_btn_dark:hover {
-    background-color: #463d3d;
 }
 
 .add_pic {
@@ -101,4 +93,20 @@
     font-weight: 700;
     line-height: 100%;
     letter-spacing: -0.3px;
+}
+
+.dark {
+    .big_logo {
+        filter: invert(10%) sepia(68%) saturate(4952%) hue-rotate(357deg) brightness(102%) contrast(118%);
+    }
+
+    .add_btn_light {
+        background: #393939;
+        border: 3px solid #800000;
+        color: #ff3c3c;
+    }
+
+    .add_btn_light:hover {
+        background-color: #463d3d;
+    }
 }

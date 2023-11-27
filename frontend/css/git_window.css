@@ -66,3 +66,25 @@
     height: 80px;
     width: 80px;
 }
+
+.dark {
+    .content {
+        background: rgb(52, 52, 52);
+    }
+
+    .box-close:hover {
+        background-color: rgba(255, 133, 133, 0.29);
+    }
+
+    .git_link {
+        color: white;
+    }
+
+    .git_link:hover {
+        background-color: rgba(255, 133, 133, 0.29);
+    }
+
+    .modal_title {
+        color: #ff3c3c;
+    }
+}
