@@ -10,6 +10,5 @@ import java.util.List;
 public class AnnounceResponse {
     private final int interval;
     private int minInterval;
-//    private String trackerId;
     private List<Peer> peers;
 }
