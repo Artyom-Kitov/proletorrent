@@ -6,34 +6,27 @@
   const isDark = useDark();
   const toggleDark = useToggle(isDark);
 
-  //alert((locale.value === 'ru'));
   let ruEnabled = (locale.value === 'ru');
   const switchLang = () => {
     let e = document.getElementById('lang');
     locale.value = e.options[e.selectedIndex].value;
-    //val === 'ru' ? locale.value = 'ru' : locale.value = 'en';
     ruEnabled = (locale.value === 'ru');
-    document.cookie = "lang=".concat(locale.value);
-    //alert(locale.value)
-  }
-
-  function onChange(event) {
-    switchLang();
+    document.cookie = "lang=".concat(locale.value, ';max-age=259200;');
   }
 </script>
 <script>
   import HeaderComponent from "@/components/HeaderComponent.vue";
   import Tab from "@/components/Tab.vue"
   import Table from "@/components/Table.vue"
+  import AddWindow from "@/components/AddWindow.vue"
 
   export default {
     components: {
-      HeaderComponent, Tab, Table
+      HeaderComponent, Tab, Table, AddWindow
     },
     data() {
       return {
         selectedArr: [true, false, false, false],
-        theme: true,
         files: [
           {id:'aaa', name:"bible", size:68198, progress:100, status:1, date:"06/06/2023"},
           {id:'a2a', name:"bible", size:68198, progress:100, status:0, date:"06/06/2023"},
@@ -60,24 +53,24 @@
     <div class="container">
       <div class="sidebar">
         <div class="add_btn_container">
-          <button class="add_btn_light">
+          <a class="add_btn_light" href="#add">
           <img class="add_pic" src="../imgs/plus_icon.svg" alt="">
             {{ $t('add-button') }}
-        </button>
+        </a>
         </div>
-        <Tab @click="select(0)" v-bind:is-selected="selectedArr[0]" v-bind:theme="this.theme">
+        <Tab @click="select(0)" v-bind:is-selected="selectedArr[0]">
           <img class="img" src="../imgs/tab_icons/all.svg" alt="" :class="[this.selectedArr[0] ? 'img_clicked' : 'img']">
           {{ $t('tabs.all') }}
         </Tab>
-        <Tab @click="select(1)" v-bind:is-selected="selectedArr[1]" v-bind:theme="this.theme">
+        <Tab @click="select(1)" v-bind:is-selected="selectedArr[1]">
           <img class="img" src="../imgs/tab_icons/down.svg" alt="" :class="[this.selectedArr[1] ? 'img_clicked' : 'img']">
           {{ $t('tabs.downloading') }}
         </Tab>
-        <Tab @click="select(2)" v-bind:is-selected="selectedArr[2]" v-bind:theme="this.theme">
+        <Tab @click="select(2)" v-bind:is-selected="selectedArr[2]">
           <img class="img" src="../imgs/tab_icons/share.svg" alt="" :class="[this.selectedArr[2] ? 'img_clicked' : 'img']">
           {{ $t('tabs.sharing') }}
         </Tab>
-        <Tab @click="select(3)" v-bind:is-selected="selectedArr[3]" v-bind:theme="this.theme">
+        <Tab @click="select(3)" v-bind:is-selected="selectedArr[3]">
           <img class="img" src="../imgs/tab_icons/paused.svg" alt="" :class="[this.selectedArr[3] ? 'img_clicked' : 'img']">
           {{ $t('tabs.paused') }}
         </Tab>
@@ -91,6 +84,7 @@
       </div>
 
       <div :class="'main'.concat(isDark ? '-dark' : '')">
+
         <div id="about" class="modal">
           <div class="content">
             <img class="star" src="../imgs/star.png" alt="star">
@@ -102,15 +96,17 @@
           </div>
         </div>
 
-
         <div id="settings" class="modal">
           <div class="settings_content">
-            <h2 class="settings_header">{{ $t('settings-modal.settings-title') }}</h2>
+            <h2 class="modal_header">{{ $t('settings-modal.settings-title') }}</h2>
             <div class="theme_container">
               <img class="settings_icon" src="../imgs/brush.svg" alt="">
               {{ $t('settings-modal.theme-toggle') }}:
               <div>
-                <button @click="toggleDark()">{{ isDark ? 'dark' : 'light' }}</button>
+                <button class="theme_button" @click="toggleDark()">
+                  <img class="theme_pic" src="../imgs/theme_icon/moon.svg" alt="dark" v-show="isDark">
+                  <img class="theme_pic" src="../imgs/theme_icon/sun.svg" alt="light" v-show="!isDark">
+                </button>
               </div>
             </div>
             <div class="theme_container">
@@ -130,6 +126,12 @@
             </div>
 
             <a href="#" class="box-close">×</a>
+          </div>
+        </div>
+
+        <div id="add" class="modal">
+          <div class="content">
+            <AddWindow/>
           </div>
         </div>
 

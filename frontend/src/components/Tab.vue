@@ -1,22 +1,17 @@
 <script>
 export default {
   props: {
-    theme: {
-      type: Boolean,
-      required: true,
-    },
     isSelected: {
       type: Boolean,
       required: true,
-    },
-
+    }
   }
 }
 </script>
 
 <template>
   <div :class="[this.isSelected ? 'tab_clicked' : 'tab']">
-  <div :class="[this.theme ? 'tab_padding_light' : 'tab_padding_dark']" v-if="this.isSelected"></div>
+  <div class="tab_padding_light" v-if="this.isSelected"></div>
   <slot></slot>
   </div>
 </template>
@@ -60,7 +55,7 @@ export default {
   width: 300px;
   border-radius: 20px;
   left: 20px;
-  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
   background-color: white;
 }
 

@@ -10,7 +10,7 @@
   "settings-button": "настройки",
   "git-modal": {
     "message": "Оцените труд работяг звездой на Github!",
-    "git-link": "Посетить репозитории"
+    "git-link": "Посетить наши репозитории"
   },
   "settings-modal": {
     "settings-title": "Параметры",
@@ -29,5 +29,11 @@
     "progress": "прогресс",
     "status": "статус",
     "date": "дата добавления"
+  },
+  "add-modal": {
+    "title": "Добавить новый торрент-файл",
+    "file-preview": "Предосмотр файла",
+    "start": "начать",
+    "send-torrent": "проверить"
   }
 }

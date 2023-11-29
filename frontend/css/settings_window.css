@@ -9,7 +9,7 @@
     letter-spacing: 1px;
 }
 
-.settings_header {
+.modal_header {
     margin: 0 0 30px 0;
     text-align: center;
     color: #8F0000;
@@ -39,12 +39,35 @@
     margin: 0 10px 0 10px;
     height: 30px;
     width: 150px;
-    background-color: white;
+    background-color: #eaeaea;
     border-radius: 10px;
     border: 2px solid #c70000;
     text-align: center;
     font-family: Courier New, serif;
     font-weight: bold;
+    font-size: 18px;
+}
+
+.theme_button:hover {
+    cursor: pointer;
+}
+
+.theme_button {
+    margin: 0 10px 0 10px;
+    background-color: #eaeaea;
+    border-radius: 20px;
+    border: 2px solid #c70000;
+    height: 50px;
+    width: 50px;
+    font-size: 30px;
+    display: flex;
+    justify-content: center;
+}
+
+.theme_pic {
+    filter: invert(9%) sepia(100%) saturate(6831%) hue-rotate(8deg) brightness(93%) contrast(113%);
+    height: 45px;
+    width: 45px;
 }
 
 .dark {
@@ -58,11 +81,23 @@
         color: white;
     }
 
-    .settings_header {
+    .modal_header {
         color: #ff3c3c;
     }
 
     .feedback {
         color: #ff3c3c;
+    }
+
+    .theme_button {
+        background-color: #303030;
+    }
+
+    .theme_pic {
+        filter: invert(84%) sepia(40%) saturate(2347%) hue-rotate(358deg) brightness(103%) contrast(103%);
+    }
+
+    .settings_icon {
+        filter: invert(84%) sepia(40%) saturate(2347%) hue-rotate(358deg) brightness(103%) contrast(103%);
     }
 }

@@ -31,6 +31,7 @@
     font-weight: 700;
     line-height: 121.1%; /* 24.22px */
     letter-spacing: -0.3px;
+    text-decoration: none;
 
     display: flex;
     justify-content: center;
