@@ -1,7 +1,8 @@
-package ru.nsu.ooad.proletorrent.torrent;
+package ru.nsu.ooad.proletorrent.torrent.tracker;
 
 import lombok.Builder;
 import lombok.Data;
+import ru.nsu.ooad.proletorrent.torrent.Peer;
 
 import java.util.List;
 
@@ -10,6 +11,5 @@ import java.util.List;
 public class AnnounceResponse {
     private final int interval;
     private int minInterval;
-//    private String trackerId;
     private List<Peer> peers;
 }

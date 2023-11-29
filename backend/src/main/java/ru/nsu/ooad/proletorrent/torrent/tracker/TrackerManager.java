@@ -1,4 +1,4 @@
-package ru.nsu.ooad.proletorrent.torrent;
+package ru.nsu.ooad.proletorrent.torrent.tracker;
 
 import ru.nsu.ooad.proletorrent.exception.TrackerException;
 
