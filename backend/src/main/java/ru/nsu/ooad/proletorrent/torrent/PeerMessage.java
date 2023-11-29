@@ -1,9 +1,6 @@
 package ru.nsu.ooad.proletorrent.torrent;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -15,17 +12,18 @@ public record PeerMessage(Type type, byte[] payload) {
     @RequiredArgsConstructor
     public enum Type {
 
-        CHOKE(0),
-        UNCHOKE(1),
-        INTERESTED(2),
-        NOT_INTERESTED(3),
-        HAVE(4),
-        BITFIELD(5),
-        REQUEST(6),
-        PIECE(7),
-        CANCEL(8);
+        KEEP_ALIVE((byte) -1),
+        CHOKE((byte) 0),
+        UNCHOKE((byte) 1),
+        INTERESTED((byte) 2),
+        NOT_INTERESTED((byte) 3),
+        HAVE((byte) 4),
+        BITFIELD((byte) 5),
+        REQUEST((byte) 6),
+        PIECE((byte) 7),
+        CANCEL((byte) 8);
 
-        private final int id;
+        private final byte id;
 
         public static Type of(int id) {
             for (Type t : Type.values()) {
@@ -43,6 +41,14 @@ public record PeerMessage(Type type, byte[] payload) {
         for (int i = 0; i < 4; i++) {
             length = (length << 8) | (0xFF & buffer.get());
         }
+        if (length == 0) {
+            return PeerMessage.builder()
+                    .type(Type.KEEP_ALIVE)
+                    .build();
+        }
+        if ((int) (length - 1) < 0) {
+            throw new IllegalArgumentException("invalid message format");
+        }
         Type type = Type.of(buffer.get());
         byte[] payload = new byte[(int) (length - 1)];
         for (int i = 0; i < length - 1; i++) {
@@ -52,6 +58,22 @@ public record PeerMessage(Type type, byte[] payload) {
                 .type(type)
                 .payload(payload)
                 .build();
+    }
+
+    public ByteBuffer toByteBuffer() {
+        if (type == Type.KEEP_ALIVE) {
+            return ByteBuffer.wrap(new byte[]{0});
+        }
+        int length = payload == null ? 0 : payload.length;
+        length++;
+        ByteBuffer result = ByteBuffer.allocate(length + 4);
+        result.putInt(length);
+        result.put(type.getId());
+        for (int i = 0; i < length - 1; i++) {
+            result.put(payload[i]);
+        }
+        result.flip();
+        return result;
     }
 
     @Override

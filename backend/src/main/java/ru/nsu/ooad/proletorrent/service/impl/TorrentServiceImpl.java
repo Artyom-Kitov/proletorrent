@@ -14,6 +14,8 @@ import ru.nsu.ooad.proletorrent.repository.document.DownloadedTorrent;
 import ru.nsu.ooad.proletorrent.service.TorrentListListener;
 import ru.nsu.ooad.proletorrent.service.TorrentService;
 import ru.nsu.ooad.proletorrent.torrent.TorrentConnection;
+import ru.nsu.ooad.proletorrent.torrent.tracker.TrackerManager;
+import ru.nsu.ooad.proletorrent.torrent.tracker.TrackerManagerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -88,7 +90,13 @@ public class TorrentServiceImpl implements TorrentService, TorrentListListener {
     @Override
     public void startUpload(TorrentInfo metaInfo) throws TorrentException {
         String peerId = generatePeerId();
-        TorrentConnection connection = new TorrentConnection(peerId, metaInfo, this);
+        TrackerManager manager = TrackerManagerFactory.getByTracker(metaInfo.getAnnounce(), metaInfo.getAnnounceList());
+        TorrentConnection connection = TorrentConnection.builder()
+                .peerId(peerId)
+                .meta(metaInfo)
+                .manager(manager)
+                .listener(this)
+                .build();
         connections.put(peerId, connection);
         new Thread(connection).start();
     }

@@ -8,7 +8,9 @@ import java.nio.ByteBuffer;
 @Data
 @Builder
 public class PeerAttachment {
-    private PeerState state;
     private ByteBuffer buffer;
     private Peer peer;
+    private boolean isApproved;
+    private boolean isUnchoked;
+    private boolean isInterested;
 }

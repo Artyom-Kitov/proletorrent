@@ -1,4 +1,4 @@
-package ru.nsu.ooad.proletorrent.torrent;
+package ru.nsu.ooad.proletorrent.torrent.tracker;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.http.HttpResponse;
@@ -8,6 +8,7 @@ import org.apache.http.impl.client.HttpClients;
 import ru.nsu.ooad.proletorrent.bencode.parser.Reader;
 import ru.nsu.ooad.proletorrent.bencode.parser.objects.*;
 import ru.nsu.ooad.proletorrent.exception.TrackerException;
+import ru.nsu.ooad.proletorrent.torrent.Peer;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -63,7 +64,6 @@ public class HttpTrackerManager implements TrackerManager {
         for (int i = 0; i < peersRawBytes.length; i += 6) {
             byte[] addr = Arrays.copyOfRange(peersRawBytes, i, i + 6);
             int port = ((0xFF & addr[4]) << 8) | (0xFF & addr[5]);
-            System.out.println(Arrays.toString(addr));
             peers.add(new Peer(Inet4Address.getByAddress(Arrays.copyOfRange(addr, 0, 4)), port));
         }
         return AnnounceResponse.builder()

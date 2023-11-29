@@ -1,20 +1,18 @@
 package ru.nsu.ooad.proletorrent.torrent;
 
-import lombok.RequiredArgsConstructor;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentInfo;
 import ru.nsu.ooad.proletorrent.exception.TorrentException;
 import ru.nsu.ooad.proletorrent.exception.TrackerException;
-import ru.nsu.ooad.proletorrent.exception.UnsupportedSchemeException;
 import ru.nsu.ooad.proletorrent.service.TorrentListListener;
+import ru.nsu.ooad.proletorrent.torrent.tracker.AnnounceRequest;
+import ru.nsu.ooad.proletorrent.torrent.tracker.AnnounceResponse;
+import ru.nsu.ooad.proletorrent.torrent.tracker.TrackerManager;
 
-import javax.print.DocFlavor;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -25,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 @Slf4j
-@RequiredArgsConstructor
+@Builder
 public class TorrentConnection implements Runnable {
 
     private static final String PSTR = (char) 0x13 + "BitTorrent protocol";
@@ -34,27 +32,10 @@ public class TorrentConnection implements Runnable {
     private final String peerId;
     private final TorrentInfo meta;
     private final TorrentListListener listener;
-    private final String tracker;
-
-    private TrackerManager manager;
+    private final TrackerManager manager;
     private byte[] infoHash;
 
     private Selector selector;
-
-    public TorrentConnection(String peerId, TorrentInfo meta, TorrentListListener listener) throws UnsupportedSchemeException {
-        this.peerId = peerId;
-        this.meta = meta;
-        this.listener = listener;
-
-        tracker = meta.getName() != null && meta.getAnnounceList() != null &&
-                    !meta.getAnnounce().startsWith("http") ? meta.getAnnounceList().stream()
-                .filter(e -> e.startsWith("http"))
-                .findFirst()
-                .orElseThrow(UnsupportedSchemeException::new) : meta.getAnnounce();
-        if (tracker == null) {
-            throw new UnsupportedSchemeException("no supported scheme");
-        }
-    }
 
     public String getName() {
         return meta.getName();
@@ -67,7 +48,6 @@ public class TorrentConnection implements Runnable {
     @Override
     public void run() {
         try {
-            manager = new HttpTrackerManager(tracker);
             List<Peer> peers = getPeers();
             selector = Selector.open();
             for (Peer peer : peers) {
@@ -98,7 +78,6 @@ public class TorrentConnection implements Runnable {
         peerChannel.connect(peer.getAddress());
         SelectionKey key = peerChannel.register(selector, SelectionKey.OP_CONNECT);
         key.attach(PeerAttachment.builder()
-                .state(PeerState.HANDSHAKING)
                 .peer(peer)
                 .buffer(ByteBuffer.allocate(BUFFER_SIZE))
                 .build());
@@ -106,10 +85,9 @@ public class TorrentConnection implements Runnable {
 
     private List<Peer> getPeers() throws DecoderException, TrackerException, IOException {
         infoHash = Hex.decodeHex(meta.getInfoHash());
-        log.info("GET " + tracker);
         AnnounceResponse response = manager.send(AnnounceRequest.builder()
                 .port(6881).infoHash(infoHash).peerId(peerId)
-                .uploaded(0).downloaded(0).left(meta.getTotalSize()).compact(true)
+                .uploaded(0).downloaded(0).left(meta.getTotalSize() == null ? 0 : meta.getTotalSize()).compact(true)
                 .noPeerId(true).event(AnnounceRequest.RequestEvent.STARTED)
                 .numWant(50).build());
         log.info(response.toString());
@@ -163,45 +141,72 @@ public class TorrentConnection implements Runnable {
     private void writePeer(SelectionKey key) throws IOException {
         SocketChannel channel = (SocketChannel) key.channel();
         PeerAttachment attachment = (PeerAttachment) key.attachment();
-        switch (attachment.getState()) {
-            case HANDSHAKING -> {
-                ByteBuffer buffer = attachment.getBuffer();
-                channel.write(createHandshake(buffer));
-                key.interestOps(SelectionKey.OP_READ);
-            }
+        if (!attachment.isApproved()) {
+            ByteBuffer buffer = attachment.getBuffer();
+            channel.write(createHandshake(buffer));
+            key.interestOps(SelectionKey.OP_READ);
+        } else if (!attachment.isInterested()) {
+            PeerMessage interest = PeerMessage.builder()
+                    .type(PeerMessage.Type.INTERESTED)
+                    .build();
+            log.info(interest.toString());
+            channel.write(interest.toByteBuffer());
+            attachment.setInterested(true);
+            key.interestOps(SelectionKey.OP_READ);
         }
     }
 
     private void readPeer(SelectionKey key) throws IOException {
         SocketChannel channel = (SocketChannel) key.channel();
         PeerAttachment attachment = (PeerAttachment) key.attachment();
-        switch (attachment.getState()) {
-            case HANDSHAKING -> {
-                if (!isValidHandshake(key)) {
-                    closeKey(key);
-                } else {
-                    log.info("successful handshake with " + attachment.getPeer());
-                    attachment.setState(PeerState.CHOKED);
-                }
-            }
-            case CHOKED -> {
-                ByteBuffer buffer = attachment.getBuffer();
-                buffer.rewind();
-                channel.read(buffer);
-                buffer.flip();
-                PeerMessage message = PeerMessage.buildFromByteBuffer(buffer);
-                log.info(message.toString());
+        if (!attachment.isApproved()) {
+            if (isValidHandshake(key)) {
+                log.info("successful handshake with " + attachment.getPeer());
+                attachment.setApproved(true);
+            } else {
                 closeKey(key);
             }
+        } else if (!attachment.isUnchoked()) {
+            if (unchoke(channel, attachment.getBuffer())) {
+                attachment.setUnchoked(true);
+                key.interestOps(SelectionKey.OP_WRITE);
+            } else {
+                closeKey(key);
+            }
+        } else if (attachment.isInterested()) {
+            ByteBuffer buffer = attachment.getBuffer();
+            buffer.clear();
+            channel.read(buffer);
+            buffer.flip();
+            PeerMessage message = PeerMessage.buildFromByteBuffer(buffer);
+            log.info(message.toString());
         }
+    }
+
+    private boolean unchoke(SocketChannel channel, ByteBuffer buffer) throws IOException {
+        log.info("unchoking " + channel.getRemoteAddress());
+        buffer.clear();
+        channel.read(buffer);
+        buffer.flip();
+        PeerMessage message;
+        try {
+            message = PeerMessage.buildFromByteBuffer(buffer);
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage());
+            return false;
+        }
+        return message.type() != PeerMessage.Type.CHOKE;
     }
 
     private boolean isValidHandshake(SelectionKey key) throws IOException {
         SocketChannel channel = (SocketChannel) key.channel();
         PeerAttachment attachment = (PeerAttachment) key.attachment();
         ByteBuffer buffer = attachment.getBuffer();
-        buffer.flip();
-        channel.read(buffer);
+        buffer.clear();
+        int read = channel.read(buffer);
+        if (read == -1) {
+            return false;
+        }
         buffer.flip();
         for (byte b : PSTR.getBytes()) {
             if (buffer.get() != b) {
@@ -218,9 +223,9 @@ public class TorrentConnection implements Runnable {
     }
 
     private ByteBuffer createHandshake(ByteBuffer buffer) {
-        buffer.rewind();
+        buffer.clear();
         buffer.put(PSTR.getBytes());
-        buffer.put(new byte[]{0, 0, 0, 0, 0, 0, 0, 0});
+        buffer.putLong(0);
         buffer.put(infoHash);
         buffer.put(peerId.getBytes());
         buffer.flip();

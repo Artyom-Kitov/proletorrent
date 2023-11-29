@@ -1,7 +1,8 @@
-package ru.nsu.ooad.proletorrent.torrent;
+package ru.nsu.ooad.proletorrent.torrent.tracker;
 
 import lombok.Builder;
 import lombok.Data;
+import ru.nsu.ooad.proletorrent.torrent.Peer;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package ru.nsu.ooad.proletorrent.torrent;
+package ru.nsu.ooad.proletorrent.torrent.tracker;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -11,12 +11,13 @@ public class AnnounceRequest {
     @RequiredArgsConstructor
     @Getter
     public enum RequestEvent {
-        NONE("none"),
-        COMPLETED("completed"),
-        STARTED("started"),
-        STOPPED("stopped");
+        NONE("none", 0),
+        COMPLETED("completed", 1),
+        STARTED("started", 2),
+        STOPPED("stopped", 3);
 
         private final String name;
+        private final int value;
     }
 
     private final byte[] infoHash;
