@@ -89,7 +89,7 @@
           <div class="content">
             <img class="star" src="../imgs/star.png" alt="star">
             <h2 class="modal_title">☆{{ $t('git-modal.message') }}☆</h2>
-            <a class="git_link" href="https://github.com/Artyom-Kitov/proletorrent" onClick="window.open('https://ru.wikipedia.org/wiki/SOCKS'); return true;" target="_blank">
+            <a class="git_link" href="https://github.com/Artyom-Kitov/proletorrent" target="_blank">
               {{ $t('git-modal.git-link') }}
             </a>
             <a href="#" class="box-close">×</a>
