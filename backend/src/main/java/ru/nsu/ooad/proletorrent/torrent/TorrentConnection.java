@@ -11,6 +11,8 @@ import ru.nsu.ooad.proletorrent.service.TorrentListListener;
 import ru.nsu.ooad.proletorrent.torrent.tracker.AnnounceRequest;
 import ru.nsu.ooad.proletorrent.torrent.tracker.AnnounceResponse;
 import ru.nsu.ooad.proletorrent.torrent.tracker.TrackerManager;
+import ru.nsu.ooad.proletorrent.torrent.utils.NotEnoughBytesException;
+import ru.nsu.ooad.proletorrent.torrent.utils.PeerBuffer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -28,6 +30,7 @@ public class TorrentConnection implements Runnable {
 
     private static final String PSTR = (char) 0x13 + "BitTorrent protocol";
     private static final int BUFFER_SIZE = 8192;
+    private static final int HANDSHAKE_SIZE = PSTR.length() + 48;
 
     private final String peerId;
     private final TorrentInfo meta;
@@ -50,6 +53,7 @@ public class TorrentConnection implements Runnable {
         try {
             List<Peer> peers = getPeers();
             selector = Selector.open();
+//            registerPeerKey(new Peer("90.161.164.173", 24592));
             for (Peer peer : peers) {
                 registerPeerKey(peer);
             }
@@ -79,7 +83,7 @@ public class TorrentConnection implements Runnable {
         SelectionKey key = peerChannel.register(selector, SelectionKey.OP_CONNECT);
         key.attach(PeerAttachment.builder()
                 .peer(peer)
-                .buffer(ByteBuffer.allocate(BUFFER_SIZE))
+                .buffer(new PeerBuffer(BUFFER_SIZE))
                 .build());
     }
 
@@ -142,94 +146,105 @@ public class TorrentConnection implements Runnable {
         SocketChannel channel = (SocketChannel) key.channel();
         PeerAttachment attachment = (PeerAttachment) key.attachment();
         if (!attachment.isApproved()) {
-            ByteBuffer buffer = attachment.getBuffer();
-            channel.write(createHandshake(buffer));
+            channel.write(createHandshake());
             key.interestOps(SelectionKey.OP_READ);
-        } else if (!attachment.isInterested()) {
-            PeerMessage interest = PeerMessage.builder()
-                    .type(PeerMessage.Type.INTERESTED)
-                    .build();
-            log.info(interest.toString());
-            channel.write(interest.toByteBuffer());
-            attachment.setInterested(true);
-            key.interestOps(SelectionKey.OP_READ);
+            return;
         }
+        if (!attachment.isInterested()) {
+//            sendMessage(key, PeerMessage.builder()
+//                    .type(PeerMessage.Type.INTERESTED)
+//                    .build());
+//            key.interestOps(SelectionKey.OP_READ);
+        }
+//        } else if (!attachment.isInterested()) {
+//            PeerMessage interest = PeerMessage.builder()
+//                    .type(PeerMessage.Type.INTERESTED)
+//                    .build();
+//            log.info(interest.toString());
+//            channel.write(interest.toByteBuffer());
+//            attachment.setInterested(true);
+//            key.interestOps(SelectionKey.OP_READ);
+//        }
     }
 
     private void readPeer(SelectionKey key) throws IOException {
         SocketChannel channel = (SocketChannel) key.channel();
         PeerAttachment attachment = (PeerAttachment) key.attachment();
+        attachment.getBuffer().readFromChannel(channel);
+
         if (!attachment.isApproved()) {
-            if (isValidHandshake(key)) {
-                log.info("successful handshake with " + attachment.getPeer());
-                attachment.setApproved(true);
-            } else {
-                closeKey(key);
+            try {
+                if (isValidHandshake(key)) {
+                    log.info("successful handshake with " + attachment.getPeer());
+                    attachment.setApproved(true);
+                    key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+                } else {
+                    closeKey(key);
+                    return;
+                }
+            } catch (NotEnoughBytesException ignore) {
             }
-        } else if (!attachment.isUnchoked()) {
-            if (unchoke(channel, attachment.getBuffer())) {
-                attachment.setUnchoked(true);
-                key.interestOps(SelectionKey.OP_WRITE);
-            } else {
-                closeKey(key);
-            }
-        } else if (attachment.isInterested()) {
-            ByteBuffer buffer = attachment.getBuffer();
-            buffer.clear();
-            channel.read(buffer);
-            buffer.flip();
-            PeerMessage message = PeerMessage.buildFromByteBuffer(buffer);
-            log.info(message.toString());
         }
+
+        List<PeerMessage> messages = attachment.getBuffer().getMessages();
+        log.info(messages.toString());
+//        PeerMessage message = readMessage(key);
+//        log.info(message.toString());
+//        if (message.type() == PeerMessage.Type.UNCHOKE && !attachment.isUnchoked()) {
+//            attachment.setUnchoked(true);
+//            key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+//        }
     }
 
-    private boolean unchoke(SocketChannel channel, ByteBuffer buffer) throws IOException {
-        log.info("unchoking " + channel.getRemoteAddress());
-        buffer.clear();
-        channel.read(buffer);
-        buffer.flip();
-        PeerMessage message;
-        try {
-            message = PeerMessage.buildFromByteBuffer(buffer);
-        } catch (IllegalArgumentException e) {
-            log.error(e.getMessage());
-            return false;
-        }
-        return message.type() != PeerMessage.Type.CHOKE;
-    }
+//    private PeerMessage readMessage(SelectionKey key) throws IOException {
+//        SocketChannel channel = (SocketChannel) key.channel();
+//        PeerAttachment attachment = (PeerAttachment) key.attachment();
+//
+//        attachment.getBuffer().clear();
+//        channel.read(attachment.getBuffer());
+//        attachment.getBuffer().flip();
+//        try {
+//            return PeerMessage.buildFromByteBuffer(attachment.getBuffer());
+//        } catch (IllegalArgumentException e) {
+//            System.out.println(channel.getRemoteAddress());
+//            System.out.println(Arrays.toString(attachment.getBuffer().array()));
+//            throw e;
+//        }
+//    }
 
-    private boolean isValidHandshake(SelectionKey key) throws IOException {
+    private void sendMessage(SelectionKey key, PeerMessage message) throws IOException {
         SocketChannel channel = (SocketChannel) key.channel();
+        channel.write(message.toByteBuffer());
+    }
+
+    private boolean isValidHandshake(SelectionKey key) throws NotEnoughBytesException {
         PeerAttachment attachment = (PeerAttachment) key.attachment();
-        ByteBuffer buffer = attachment.getBuffer();
-        buffer.clear();
-        int read = channel.read(buffer);
-        if (read == -1) {
-            return false;
-        }
-        buffer.flip();
+        PeerBuffer buffer = attachment.getBuffer();
+
+        ByteBuffer handshake = buffer.getHandshake(HANDSHAKE_SIZE);
+        System.out.println("handshake: " + Arrays.toString(handshake.array()));
         for (byte b : PSTR.getBytes()) {
-            if (buffer.get() != b) {
+            if (handshake.get() != b) {
                 return false;
             }
         }
-        buffer.getLong();
+        handshake.getLong();
         for (byte b : infoHash) {
-            if (buffer.get() != b) {
+            if (handshake.get() != b) {
                 return false;
             }
         }
         return true;
     }
 
-    private ByteBuffer createHandshake(ByteBuffer buffer) {
-        buffer.clear();
-        buffer.put(PSTR.getBytes());
-        buffer.putLong(0);
-        buffer.put(infoHash);
-        buffer.put(peerId.getBytes());
-        buffer.flip();
-        return buffer;
+    private ByteBuffer createHandshake() {
+        ByteBuffer handshake = ByteBuffer.allocate(HANDSHAKE_SIZE);
+        handshake.put(PSTR.getBytes());
+        handshake.putLong(0);
+        handshake.put(infoHash);
+        handshake.put(peerId.getBytes());
+        handshake.flip();
+        return handshake;
     }
 
 }
