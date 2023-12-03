@@ -2,30 +2,38 @@ package ru.nsu.ooad.proletorrent.torrent.tracker;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import ru.nsu.ooad.proletorrent.bencode.BencodeException;
 import ru.nsu.ooad.proletorrent.bencode.parser.Reader;
 import ru.nsu.ooad.proletorrent.bencode.parser.objects.*;
 import ru.nsu.ooad.proletorrent.exception.TrackerException;
 import ru.nsu.ooad.proletorrent.torrent.Peer;
 
 import java.io.IOException;
-import java.net.Inet4Address;
-import java.net.URLEncoder;
+import java.net.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 public class HttpTrackerManager implements TrackerManager {
 
     private static final Charset TORRENT_CHARSET = StandardCharsets.ISO_8859_1;
+    private static final int TIMEOUT = 1000;
 
     private final String announceUrl;
-    private final CloseableHttpClient client = HttpClients.createDefault();
+    private final CloseableHttpClient client = HttpClientBuilder.create()
+            .setDefaultRequestConfig(RequestConfig.custom()
+                    .setConnectTimeout(TIMEOUT)
+                    .build())
+            .build();
 
     @Override
     public AnnounceResponse send(AnnounceRequest request) throws IOException, TrackerException {
@@ -45,7 +53,12 @@ public class HttpTrackerManager implements TrackerManager {
         HttpResponse response = client.execute(trackerRequest);
 
         byte[] bytes = response.getEntity().getContent().readAllBytes();
-        BencodeDictionary bencodeResponse = new Reader(new String(bytes)).readDictionary();
+        BencodeDictionary bencodeResponse;
+        try {
+            bencodeResponse = new Reader(new String(bytes)).readDictionary();
+        } catch (BencodeException e) {
+            throw new TrackerException("invalid response from tracker");
+        }
         IBencodeObject error = bencodeResponse.find(new BencodeString("failure reason"));
         if (error != null) {
             throw new TrackerException(error.toString());
@@ -70,6 +83,15 @@ public class HttpTrackerManager implements TrackerManager {
                 .interval(interval)
                 .peers(peers)
                 .build();
+    }
+
+    @Override
+    public InetAddress getHost() {
+        try {
+            return InetAddress.getByName(new URL(announceUrl).getHost());
+        } catch (MalformedURLException | UnknownHostException e) {
+            return null;
+        }
     }
 
     private int indexOf(byte[] source, byte[] dest) {

@@ -41,10 +41,10 @@ public class UdpTrackerManager implements TrackerManager {
 
             buffer.getInt();
             int interval = buffer.getInt();
-            int leechers = buffer.getInt();
-            int seeders = buffer.getInt();
+            buffer.getInt();
+            buffer.getInt();
             List<Peer> peers = new ArrayList<>();
-            for (int i = 0; i < leechers + seeders; i++) {
+            while (buffer.position() < response.getLength()) {
                 byte[] addr = new byte[4];
                 buffer.get(addr, 0, 4);
                 int port = ((0xFF & buffer.get()) << 8) | (0xFF & buffer.get());
@@ -55,6 +55,11 @@ public class UdpTrackerManager implements TrackerManager {
                     .peers(peers)
                     .build();
         }
+    }
+
+    @Override
+    public InetAddress getHost() {
+        return address;
     }
 
     private byte[] obtainConnectionId(DatagramSocket socket, byte[] transactionId) throws IOException, TrackerException {

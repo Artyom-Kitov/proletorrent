@@ -1,9 +1,11 @@
 package ru.nsu.ooad.proletorrent.torrent;
 
 import lombok.Builder;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.springframework.data.util.Pair;
 import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentInfo;
 import ru.nsu.ooad.proletorrent.exception.TorrentException;
 import ru.nsu.ooad.proletorrent.exception.TrackerException;
@@ -19,7 +21,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -28,17 +31,28 @@ import java.util.Set;
 @Builder
 public class TorrentConnection implements Runnable {
 
+    private static final int PIPELINE_LENGTH = 5;
+    private static final int BUFFER_SIZE = 65536 * PIPELINE_LENGTH;
     private static final String PSTR = (char) 0x13 + "BitTorrent protocol";
-    private static final int BUFFER_SIZE = 8192;
     private static final int HANDSHAKE_SIZE = PSTR.length() + 48;
 
     private final String peerId;
     private final TorrentInfo meta;
     private final TorrentListListener listener;
-    private final TrackerManager manager;
+    private final List<TrackerManager> managers;
+    private TrackerManager aliveTracker;
     private byte[] infoHash;
 
     private Selector selector;
+    private PieceQueue pieceQueue;
+
+    private TorrentFileWriter writer;
+
+    private int pollInterval;
+    private Instant lastPolledAt;
+
+    @Getter
+    private long bytesDownloaded;
 
     public String getName() {
         return meta.getName();
@@ -50,10 +64,12 @@ public class TorrentConnection implements Runnable {
 
     @Override
     public void run() {
+        pieceQueue = new PieceQueue(meta.getPieces(), Math.toIntExact(meta.getPieceLength()));
+        log.info(meta.getPieces().size() + " pieces of length " + meta.getPieceLength());
         try {
+            writer = new TorrentFileWriter(meta.getName(), Math.toIntExact(meta.getPieceLength()));
             List<Peer> peers = getPeers();
             selector = Selector.open();
-//            registerPeerKey(new Peer("90.161.164.173", 24592));
             for (Peer peer : peers) {
                 registerPeerKey(peer);
             }
@@ -67,6 +83,7 @@ public class TorrentConnection implements Runnable {
             log.error(e.getMessage());
             if (selector != null) {
                 try {
+                    writer.close();
                     selector.close();
                 } catch (IOException ignore) {
                 }
@@ -79,7 +96,7 @@ public class TorrentConnection implements Runnable {
     private void registerPeerKey(Peer peer) throws IOException {
         SocketChannel peerChannel = SocketChannel.open();
         peerChannel.configureBlocking(false);
-        peerChannel.connect(peer.getAddress());
+        peerChannel.connect(peer.address());
         SelectionKey key = peerChannel.register(selector, SelectionKey.OP_CONNECT);
         key.attach(PeerAttachment.builder()
                 .peer(peer)
@@ -87,18 +104,56 @@ public class TorrentConnection implements Runnable {
                 .build());
     }
 
-    private List<Peer> getPeers() throws DecoderException, TrackerException, IOException {
+    private List<Peer> getPeers() throws DecoderException, TrackerException {
         infoHash = Hex.decodeHex(meta.getInfoHash());
-        AnnounceResponse response = manager.send(AnnounceRequest.builder()
+        for (TrackerManager manager : managers) {
+            try {
+                AnnounceResponse response = announce(manager);
+                log.info(response.toString());
+                pollInterval = response.getInterval();
+                log.info("interval: " + pollInterval + "s");
+                lastPolledAt = Instant.now();
+                aliveTracker = manager;
+                return response.getPeers();
+            } catch (IOException | TrackerException e) {
+                log.warn("tracker " + manager.getHost() + " is not alive");
+            }
+        }
+        throw new TrackerException("no alive trackers");
+    }
+
+    private List<Peer> pollAliveTracker() {
+        try {
+            AnnounceResponse response = announce(aliveTracker);
+            log.info(response.toString());
+            pollInterval = response.getInterval();
+            lastPolledAt = Instant.now();
+            return response.getPeers();
+        } catch (IOException | TrackerException e) {
+            log.warn("tracker " + aliveTracker.getHost() + " died");
+            return List.of();
+        }
+    }
+
+    private AnnounceResponse announce(TrackerManager manager) throws TrackerException, IOException {
+        return manager.send(AnnounceRequest.builder()
                 .port(6881).infoHash(infoHash).peerId(peerId)
                 .uploaded(0).downloaded(0).left(meta.getTotalSize() == null ? 0 : meta.getTotalSize()).compact(true)
                 .noPeerId(true).event(AnnounceRequest.RequestEvent.STARTED)
                 .numWant(50).build());
-        log.info(response.toString());
-        return response.getPeers();
     }
 
     private void handleKeys(Set<SelectionKey> keys) {
+        if (lastPolledAt.plus(Duration.ofSeconds(pollInterval)).isBefore(Instant.now())) {
+            try {
+                List<Peer> newPeers = pollAliveTracker();
+                for (Peer peer : newPeers) {
+                    registerPeerKey(peer);
+                }
+            } catch (IOException e) {
+                log.error("error registering new peer: " + e.getMessage());
+            }
+        }
         Iterator<SelectionKey> iterator = keys.iterator();
         while (iterator.hasNext()) {
             SelectionKey key = iterator.next();
@@ -151,20 +206,16 @@ public class TorrentConnection implements Runnable {
             return;
         }
         if (!attachment.isInterested()) {
-//            sendMessage(key, PeerMessage.builder()
-//                    .type(PeerMessage.Type.INTERESTED)
-//                    .build());
-//            key.interestOps(SelectionKey.OP_READ);
+            sendMessage(key, PeerMessage.builder()
+                    .type(PeerMessage.Type.INTERESTED)
+                    .build());
+            attachment.setInterested(true);
+            return;
         }
-//        } else if (!attachment.isInterested()) {
-//            PeerMessage interest = PeerMessage.builder()
-//                    .type(PeerMessage.Type.INTERESTED)
-//                    .build();
-//            log.info(interest.toString());
-//            channel.write(interest.toByteBuffer());
-//            attachment.setInterested(true);
-//            key.interestOps(SelectionKey.OP_READ);
-//        }
+        for (int i = 0; i < PIPELINE_LENGTH; i++) {
+            askPiece(key);
+        }
+        key.interestOps(SelectionKey.OP_READ);
     }
 
     private void readPeer(SelectionKey key) throws IOException {
@@ -182,39 +233,97 @@ public class TorrentConnection implements Runnable {
                     closeKey(key);
                     return;
                 }
-            } catch (NotEnoughBytesException ignore) {
+            } catch (NotEnoughBytesException e) {
+                log.error(attachment.getPeer() + ": invalid handshake");
+                closeKey(key);
             }
         }
 
         List<PeerMessage> messages = attachment.getBuffer().getMessages();
-        log.info(messages.toString());
-//        PeerMessage message = readMessage(key);
-//        log.info(message.toString());
-//        if (message.type() == PeerMessage.Type.UNCHOKE && !attachment.isUnchoked()) {
-//            attachment.setUnchoked(true);
-//            key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-//        }
+        if (messages.isEmpty()) {
+            return;
+        }
+        handleMessages(key, messages);
     }
 
-//    private PeerMessage readMessage(SelectionKey key) throws IOException {
-//        SocketChannel channel = (SocketChannel) key.channel();
-//        PeerAttachment attachment = (PeerAttachment) key.attachment();
-//
-//        attachment.getBuffer().clear();
-//        channel.read(attachment.getBuffer());
-//        attachment.getBuffer().flip();
-//        try {
-//            return PeerMessage.buildFromByteBuffer(attachment.getBuffer());
-//        } catch (IllegalArgumentException e) {
-//            System.out.println(channel.getRemoteAddress());
-//            System.out.println(Arrays.toString(attachment.getBuffer().array()));
-//            throw e;
-//        }
-//    }
+    private void handleMessages(SelectionKey key, List<? extends PeerMessage> messages) throws IOException {
+        PeerAttachment attachment = (PeerAttachment) key.attachment();
+        for (PeerMessage message : messages) {
+            switch (message.type()) {
+                case CHOKE -> {
+                    attachment.setUnchoked(false);
+                    key.interestOps(SelectionKey.OP_READ);
+                }
+                case UNCHOKE -> {
+                    attachment.setUnchoked(true);
+                    key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+                }
+                case KEEP_ALIVE -> {}
+                case BITFIELD -> pieceQueue.addPiecesByMask(message.payload(), attachment.getPeer());
+                case HAVE -> {
+                    int index = ByteBuffer.wrap(message.payload()).getInt();
+                    pieceQueue.addPiece(index, Set.of(attachment.getPeer()));
+                }
+                case PIECE -> {
+                    ByteBuffer buffer = ByteBuffer.wrap(message.payload());
+                    int piece = buffer.getInt();
+                    Piece pending = pieceQueue.getPendingPiece();
+                    if (pending.getIndex() != piece) {
+                        continue;
+                    }
+                    int offset = buffer.getInt();
+                    pending.writePart(message.payload(), offset);
+                    key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+                    if (pending.isComplete() && pending.isValidHash()) {
+                        if (!pending.isValidHash()) {
+                            log.error("piece #" + pending.getIndex() + ": hashes don't match");
+                            pieceQueue.remove();
+                            pieceQueue.addPiece(pending.getIndex(), pending.getPeers());
+                        } else {
+                            log.info("got piece #" + pending.getIndex());
+                            writer.write(pending.getData(), pending.getIndex());
+                            bytesDownloaded += pending.getData().length;
+                            pieceQueue.remove();
+                            if (bytesDownloaded == meta.getTotalSize() && pieceQueue.isDownloaded()) {
+                                log.info(meta.getName() + " successfully downloaded!");
+                                writer.close();
+                                Thread.currentThread().interrupt();
+                            }
+                        }
+                    }
+                }
+                default -> {
+                    log.info(String.valueOf(message));
+                }
+            }
+        }
+    }
 
     private void sendMessage(SelectionKey key, PeerMessage message) throws IOException {
         SocketChannel channel = (SocketChannel) key.channel();
         channel.write(message.toByteBuffer());
+    }
+
+    private void askPiece(SelectionKey key) throws IOException {
+        Piece piece = pieceQueue.getPendingPiece();
+        if (piece == null) {
+            return;
+        }
+        PeerAttachment attachment = (PeerAttachment) key.attachment();
+        if (!piece.getPeers().contains(attachment.getPeer())) {
+            return;
+        }
+        Pair<Integer, Integer> part = piece.getEmptyPart();
+        if (part == null) {
+            return;
+        }
+        byte[] payload = new byte[12];
+        ByteBuffer b = ByteBuffer.wrap(payload);
+        b.putInt(piece.getIndex()).putInt(part.getFirst()).putInt(part.getSecond());
+        sendMessage(key, PeerMessage.builder()
+                .type(PeerMessage.Type.REQUEST)
+                .payload(payload)
+                .build());
     }
 
     private boolean isValidHandshake(SelectionKey key) throws NotEnoughBytesException {
@@ -222,7 +331,6 @@ public class TorrentConnection implements Runnable {
         PeerBuffer buffer = attachment.getBuffer();
 
         ByteBuffer handshake = buffer.getHandshake(HANDSHAKE_SIZE);
-        System.out.println("handshake: " + Arrays.toString(handshake.array()));
         for (byte b : PSTR.getBytes()) {
             if (handshake.get() != b) {
                 return false;

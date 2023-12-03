@@ -52,8 +52,12 @@ public class CircularByteBuffer {
         if (bytesAvailable() < length) {
             throw new OutOfBytesException("not enough bytes to get");
         }
-        if (length >= 0) {
-            System.arraycopy(buffer, readPosition, dst, offset, length);
+        int index = readPosition;
+        for (int i = 0; i < length; i++, index++) {
+            if (index == capacity) {
+                index = 0;
+            }
+            dst[offset + i] = buffer[index];
         }
     }
 

@@ -10,13 +10,10 @@ import java.util.List;
 
 public class PeerBuffer {
 
-    private final int capacity;
-
     private final CircularByteBuffer buffer;
     private final ByteBuffer inputBuffer;
 
     public PeerBuffer(int capacity) {
-        this.capacity = capacity;
         buffer = new CircularByteBuffer(capacity);
         inputBuffer = ByteBuffer.allocate(capacity);
     }
@@ -38,20 +35,12 @@ public class PeerBuffer {
 
     public List<PeerMessage> getMessages() {
         List<PeerMessage> messages = new ArrayList<>();
-        while (true) {
-            if (buffer.bytesAvailable() < 4) {
-                break;
-            }
+        while (buffer.bytesAvailable() >= 4) {
             byte[] lengthBytes = new byte[4];
             buffer.getWithoutSkip(lengthBytes, 0, 4);
             int length = 0;
             for (byte b : lengthBytes) {
                 length = (length << 8) | (0xFF & b);
-            }
-            if (length == 0) {
-                messages.add(PeerMessage.builder()
-                        .type(PeerMessage.Type.KEEP_ALIVE)
-                        .build());
             }
             if (buffer.bytesAvailable() < length + 4) {
                 break;

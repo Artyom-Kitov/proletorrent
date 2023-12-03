@@ -147,7 +147,7 @@ public class Reader {
      */
     public BencodeDictionary readDictionary() {
         if (readCurrentByte() != 'd')
-            throw new Error("Error parsing dictionary. Was expecting a 'd' but got " + readCurrentByte());
+            throw new BencodeException("Error parsing dictionary. Was expecting a 'd' but got " + readCurrentByte());
         currentByteIndex++;
 
         BencodeDictionary dict = new BencodeDictionary();

@@ -8,7 +8,9 @@ import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentFile;
 import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentInfo;
 import ru.nsu.ooad.proletorrent.dto.TorrentFileTreeNode;
 import ru.nsu.ooad.proletorrent.dto.TorrentStatusResponse;
+import ru.nsu.ooad.proletorrent.exception.InvalidTorrentException;
 import ru.nsu.ooad.proletorrent.exception.TorrentException;
+import ru.nsu.ooad.proletorrent.exception.TrackerException;
 import ru.nsu.ooad.proletorrent.repository.TorrentRepository;
 import ru.nsu.ooad.proletorrent.repository.document.DownloadedTorrent;
 import ru.nsu.ooad.proletorrent.service.TorrentListListener;
@@ -46,7 +48,7 @@ public class TorrentServiceImpl implements TorrentService, TorrentListListener {
                     .id(counter)
                     .name(connection.getName())
                     .size(connection.getSize())
-                    .progress(69)
+                    .progress((int) (100.0 * connection.getBytesDownloaded() / connection.getSize()))
                     .status(TorrentStatusResponse.Status.DOWNLOADING.getValue())
                     .build());
         }
@@ -74,8 +76,7 @@ public class TorrentServiceImpl implements TorrentService, TorrentListListener {
         }
         long size = torrent.getFileList().stream()
                 .map(TorrentFile::getFileSize)
-                .reduce(Long::sum)
-                .orElseThrow();
+                .reduce(0L, Long::sum);
         TorrentFileTreeNode node = TorrentFileTreeNode.builder()
                 .name(torrent.getName())
                 .size(size)
@@ -89,12 +90,20 @@ public class TorrentServiceImpl implements TorrentService, TorrentListListener {
 
     @Override
     public void startUpload(TorrentInfo metaInfo) throws TorrentException {
+        if (!metaInfo.isSingleFileTorrent()) {
+            metaInfo.setTotalSize(metaInfo.getFileList().stream()
+                    .map(TorrentFile::getFileSize)
+                    .reduce(0L, Long::sum));
+        }
         String peerId = generatePeerId();
-        TrackerManager manager = TrackerManagerFactory.getByTracker(metaInfo.getAnnounce(), metaInfo.getAnnounceList());
+        List<TrackerManager> managers = TrackerManagerFactory.of(metaInfo.getAnnounce(), metaInfo.getAnnounceList());
+        if (managers.isEmpty()) {
+            throw new InvalidTorrentException("no tracker provided");
+        }
         TorrentConnection connection = TorrentConnection.builder()
                 .peerId(peerId)
                 .meta(metaInfo)
-                .manager(manager)
+                .managers(managers)
                 .listener(this)
                 .build();
         connections.put(peerId, connection);
