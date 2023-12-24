@@ -32,6 +32,7 @@ public class TorrentController {
 
     private final TorrentService torrentService;
 
+    @CrossOrigin
     @PostMapping("/info")
     public ResponseEntity<TorrentFileTreeNode> getTorrentFileInfo(
             @RequestParam("torrent") MultipartFile torrent) throws InvalidTorrentException {
@@ -44,6 +45,7 @@ public class TorrentController {
         return ResponseEntity.ok(torrentService.getTorrentFileStructure(metaInfo));
     }
 
+    @CrossOrigin
     @PostMapping("/start-upload")
     public ResponseEntity<UploadStatusResponse> startUpload(
             @RequestParam("torrent") MultipartFile torrent) throws TorrentException {
@@ -57,11 +59,13 @@ public class TorrentController {
         return ResponseEntity.ok(new UploadStatusResponse("upload started"));
     }
 
+    @CrossOrigin
     @GetMapping("/statuses")
     public ResponseEntity<List<TorrentStatusResponse>> getStatuses() {
         return ResponseEntity.ok(torrentService.getStatuses());
     }
 
+    @CrossOrigin
     @GetMapping("/download/{name}")
     public ResponseEntity<Resource> download(@PathVariable String name) throws NoSuchTorrentException, IOException {
         Resource resource = torrentService.download(name);
