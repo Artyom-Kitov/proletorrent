@@ -19,26 +19,44 @@
   import Tab from "@/components/Tab.vue"
   import Table from "@/components/Table.vue"
   import AddWindow from "@/components/AddWindow.vue"
+  import axios from "axios";
+  import {useI18n} from "vue-i18n";
 
   export default {
     components: {
       HeaderComponent, Tab, Table, AddWindow
     },
+    setup() {
+      const {t} = useI18n();
+      return {t}
+    },
     data() {
       return {
         selectedArr: [true, false, false, false],
-        files: [
-          {id:'aaa', name:"bible", size:68198, progress:100, status:1, date:"06/06/2023"},
-          {id:'a2a', name:"bible", size:68198, progress:100, status:0, date:"06/06/2023"},
-          {id:'a3a', name:"bible", size:68198, progress:100, status:2, date:"06/06/2023"},
-          {id:'a4a', name:"bible", size:68198, progress:100, status:0, date:"06/06/2023"}
-        ]
+        files: []
       }
+    },
+    mounted() {
+      this.refreshList();
+      this.intervalId = setInterval(this.refreshList, 2000);
+    },
+    beforeDestroy() {
+      clearInterval(this.intervalId);
     },
     methods: {
       select(num){
         this.selectedArr = this.selectedArr.map(() => false);
         this.selectedArr[num] = true;
+      },
+      refreshList() {
+        axios.get('http://localhost:8081/api/statuses')
+            .then(response => {
+              this.files = response.data;
+              //console.log(response.data);
+            })
+            .catch(error => {
+              console.error(error);
+            });
       }
     }
   }
@@ -74,6 +92,7 @@
           <img class="img" src="../imgs/tab_icons/paused.svg" alt="" :class="[this.selectedArr[3] ? 'img_clicked' : 'img']">
           {{ $t('tabs.paused') }}
         </Tab>
+        <button @click="refreshList()">refresh</button>
         <div class="pic_container"><img class="big_logo" src="../imgs/logo512q.svg" alt=""></div>
         <a href="#settings" class="settings_btn">
           <img class="settings_pic" src="../imgs/customize.svg" alt="">
@@ -81,6 +100,7 @@
             {{ $t('settings-button') }}
           </div>
         </a>
+
       </div>
 
       <div :class="'main'.concat(isDark ? '-dark' : '')">

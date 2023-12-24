@@ -61,7 +61,9 @@
 }
 
 .pic_container {
-    flex-basis: 55%;
+    flex-basis: 77%;
+    display: flex;
+    align-items: center;
 }
 
 .settings_btn {
