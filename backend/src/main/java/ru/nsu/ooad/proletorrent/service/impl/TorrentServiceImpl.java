@@ -149,11 +149,12 @@ public class TorrentServiceImpl implements TorrentService, TorrentListListener {
     }
 
     @Override
-    public void onUpload(String key, String name, long size, Path fullPath) {
+    public void onUpload(String key, String name, long size, Path fullPath, Instant createdAt) {
         torrentRepository.save(DownloadedTorrent.builder()
                         .id(key)
                         .name(name)
                         .size(size)
+                        .createdAt(createdAt)
                         .fullPath(fullPath.toString())
                 .build());
     }

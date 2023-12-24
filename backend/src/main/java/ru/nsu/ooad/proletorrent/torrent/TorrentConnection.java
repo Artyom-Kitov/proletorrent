@@ -322,7 +322,8 @@ public class TorrentConnection implements Runnable {
     private void stopUpload() throws IOException {
         writer.close();
         selector.close();
-        listener.onUpload(peerId, meta.getName(), writer.getTotalDownloaded(), writer.getFilePath());
+        listener.onUpload(peerId, meta.getName(), writer.getTotalDownloaded(), writer.getFilePath(),
+                createdAt);
     }
 
     private void sendMessage(SelectionKey key, PeerMessage message) throws IOException {
