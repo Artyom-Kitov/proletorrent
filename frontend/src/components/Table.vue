@@ -1,7 +1,10 @@
 <script>
-import axios from "axios";
-
 export default {
+  data() {
+    return {
+      options: { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: "numeric", minute:"numeric" }
+    }
+  },
   props: {
     files: {
       type: Array,
@@ -21,27 +24,6 @@ export default {
       const i = Math.floor(Math.log(bytes) / Math.log(k))
 
       return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
-    },
-    downloadFile(file) {
-      console.log('start to download')
-      axios.get('http://localhost:8081/api/download/'.concat(file.name))
-          .then(response => {
-            //todo remake this shit
-            const blob = new Blob([response.data], { type: response.headers['content-type'] });
-            const blobUrl = URL.createObjectURL(blob);
-
-            const a = document.createElement('a');
-            a.href = blobUrl;
-
-            a.download = file.name;
-            document.body.appendChild(a);
-            a.click();
-
-            URL.revokeObjectURL(blobUrl);
-          })
-          .catch(error => {
-            console.error(error);
-          });
     }
   }
 }
@@ -49,7 +31,15 @@ export default {
 
 <template>
 <table class="tbl">
-  <tr><th>№№</th>
+  <colgroup>
+    <col span="1" style="width: 5%;">
+    <col span="1" style="width: 37%;">
+    <col span="1" style="width: 10%;">
+    <col span="1" style="width: 16%;">
+    <col span="1" style="width: 16%;">
+    <col span="1" style="width: 16%;">
+  </colgroup>
+  <tr><th class="th_edge">№№</th>
     <th class="name_cell">
     {{ $t('table-header.name') }}
     </th>
@@ -62,8 +52,8 @@ export default {
     <th>
       {{ $t('table-header.status') }}
     </th>
-    <th>
-      {{ $t('table-header.date') }}
+    <th class="th_edge">
+      {{ $t('table-header.created-at') }}
     </th>
   </tr>
   <tr :class="(index % 2 === 0) ? 'tr_odd_light' : ''" v-for="(file, index) in files" v-show="(file.status === this.filter) || (this.filter === -1)" >
@@ -72,7 +62,7 @@ export default {
     </td>
     <td class="name_cell">
       {{ file.name }}
-      <button @click="downloadFile(file)">d</button>
+      <a v-show="file.status === 1" class="download_file" :href="'http://localhost:8081/api/download/'.concat(file.name)">🡻</a>
     </td>
     <td>
       {{ this.formatBytes(file.size, 2) }}
@@ -84,7 +74,7 @@ export default {
       {{ $t('status.'.concat(file.status)) }}
     </td>
     <td>
-      {{ file.createdAt }}
+      {{ new Date(file.createdAt).toLocaleString('en-GB', { timeZone: 'UTC' })}}
     </td>
   </tr>
 </table>
@@ -99,6 +89,12 @@ export default {
 
 th {
   border: 1px solid #5b5b5b;
+  border-top: none;
+}
+
+.th_edge {
+  border-left: none;
+  border-right: none;
 }
 
 td,.name_cell {
@@ -128,6 +124,15 @@ progress {
   .th {
     border: 1px solid;
   }
+}
+
+.download_file {
+  border-radius: 10px;
+  border: #960000 solid 2px;
+  color: #960000;
+  font-weight: bold;
+  width: 30px;
+  text-decoration: none;
 }
 
 </style>

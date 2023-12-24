@@ -92,7 +92,6 @@
           <img class="img" src="../imgs/tab_icons/paused.svg" alt="" :class="[this.selectedArr[3] ? 'img_clicked' : 'img']">
           {{ $t('tabs.paused') }}
         </Tab>
-        <button @click="refreshList()">refresh</button>
         <div class="pic_container"><img class="big_logo" src="../imgs/logo512q.svg" alt=""></div>
         <a href="#settings" class="settings_btn">
           <img class="settings_pic" src="../imgs/customize.svg" alt="">

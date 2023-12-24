@@ -28,7 +28,7 @@
     "size":"size",
     "progress": "progress",
     "status": "status",
-    "date": "date of creation"
+    "created-at": "date of creation"
   },
   "add-modal": {
     "title": "Add new torrent file",
