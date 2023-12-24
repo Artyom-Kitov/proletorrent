@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentFile;
 import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentInfo;
 import ru.nsu.ooad.proletorrent.dto.TorrentFileTreeNode;
@@ -22,6 +23,9 @@ import ru.nsu.ooad.proletorrent.torrent.TorrentConnection;
 import ru.nsu.ooad.proletorrent.torrent.tracker.TrackerManager;
 import ru.nsu.ooad.proletorrent.torrent.tracker.TrackerManagerFactory;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.*;
@@ -43,6 +47,12 @@ public class TorrentServiceImpl implements TorrentService, TorrentListListener {
     private final TorrentRepository torrentRepository;
 
     private final ConcurrentHashMap<String, TorrentConnection> connections = new ConcurrentHashMap<>();
+
+    @Override
+    public long getTorrentSize(String name) {
+        Optional<DownloadedTorrent> torrent = torrentRepository.findByName(name);
+        return torrent.map(DownloadedTorrent::getSize).orElse(-1L);
+    }
 
     @Override
     public List<TorrentStatusResponse> getStatuses() {
@@ -127,11 +137,23 @@ public class TorrentServiceImpl implements TorrentService, TorrentListListener {
     }
 
     @Override
-    public Resource download(String name) throws NoSuchTorrentException {
+    public StreamingResponseBody download(String name) throws NoSuchTorrentException, FileNotFoundException {
         DownloadedTorrent torrent = torrentRepository.findByName(name)
                 .orElseThrow(() -> new NoSuchTorrentException("no such downloaded torrent"));
         Path path = Path.of(torrent.getFullPath());
-        return new FileSystemResource(path.toFile());
+        if (!Files.exists(path)) {
+            torrentRepository.delete(torrent);
+            throw new NoSuchTorrentException("no such downloaded torrent");
+        }
+        FileInputStream inputStream = new FileInputStream(path.toFile());
+        return outputStream -> {
+            byte[] buffer = new byte[8192];
+            int bytesRead = 0;
+            while ((bytesRead = inputStream.read(buffer, 0, buffer.length)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            inputStream.close();
+        };
     }
 
     private String generatePeerId() {

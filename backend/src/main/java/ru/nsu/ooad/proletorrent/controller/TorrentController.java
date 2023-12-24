@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import ru.nsu.ooad.proletorrent.bencode.BencodeException;
 import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentInfo;
 import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentParser;
@@ -67,12 +68,11 @@ public class TorrentController {
 
     @CrossOrigin
     @GetMapping("/download/{name}")
-    public ResponseEntity<Resource> download(@PathVariable String name) throws NoSuchTorrentException, IOException {
-        Resource resource = torrentService.download(name);
+    public ResponseEntity<StreamingResponseBody> download(@PathVariable String name) throws NoSuchTorrentException, IOException {
         return ResponseEntity.ok()
-                .contentLength(resource.contentLength())
+                .contentLength(torrentService.getTorrentSize(name))
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(resource);
+                .body(torrentService.download(name));
     }
 
 }
