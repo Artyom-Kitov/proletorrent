@@ -26,24 +26,17 @@ export default {
       console.log('start to download')
       axios.get('http://localhost:8081/api/download/'.concat(file.name))
           .then(response => {
-            // Создаем Blob из массива байт в ответе
+            //todo remake this shit
             const blob = new Blob([response.data], { type: response.headers['content-type'] });
-
-            // Создаем URL для Blob
             const blobUrl = URL.createObjectURL(blob);
 
-            // Создаем ссылку для скачивания
             const a = document.createElement('a');
             a.href = blobUrl;
 
-            // Устанавливаем имя файла для сохранения
             a.download = file.name;
-
-            // Добавляем ссылку в документ и эмулируем клик для начала скачивания
             document.body.appendChild(a);
             a.click();
 
-            // Очищаем URL объекта Blob после скачивания
             URL.revokeObjectURL(blobUrl);
           })
           .catch(error => {
@@ -91,7 +84,7 @@ export default {
       {{ $t('status.'.concat(file.status)) }}
     </td>
     <td>
-      {{ file.date }}
+      {{ file.createdAt }}
     </td>
   </tr>
 </table>
