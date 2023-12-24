@@ -37,3 +37,14 @@ Jbackend/src/main/java/ru/nsu/ooad/proletorrent/service/TorrentService.java,9\8
 Tbackend/src/main/java/ru/nsu/ooad/proletorrent/exception/NoSuchTorrentException.java,7\6\76c47731be21900cc5b1bd1da30f3448226a7552
 9
 	README.md,8\e\8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
+:
+
+.gitignore,a\5\a5cc2925ca8258af241be7e5b0381edf30266302
+B
+backend/.gitignore,7\e\7e16691a9fc60084a157565ec422c8094d3df67c
+x
+Hbackend/src/main/java/ru/nsu/ooad/proletorrent/controller/WebConfig.java,3\0\30f78767e1b33cae81fb1a2a02b5afa24a6bd403
+C
+backend/gradlew.bat,7\b\7b3a79f800e85c8b44fcfc250f8be64bf945f627
+B
+backend/Dockerfile,1\2\1299d064ef40647d5147370c3665f2bb07ec76d8
