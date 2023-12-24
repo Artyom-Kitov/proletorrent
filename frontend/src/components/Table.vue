@@ -11,6 +11,9 @@ export default {
     },
     filter: {
       type: Number,
+    },
+    server: {
+      type: String
     }
   },
   methods: {

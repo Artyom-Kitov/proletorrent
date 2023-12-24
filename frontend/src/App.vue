@@ -33,7 +33,8 @@
     data() {
       return {
         selectedArr: [true, false, false, false],
-        files: []
+        files: [],
+        server: 'http://localhost:8081'
       }
     },
     mounted() {
@@ -49,7 +50,7 @@
         this.selectedArr[num] = true;
       },
       refreshList() {
-        axios.get('http://localhost:8081/api/statuses')
+        axios.get(this.server.concat('/api/statuses'))
             .then(response => {
               this.files = response.data;
               //console.log(response.data);
@@ -150,21 +151,21 @@
 
         <div id="add" class="modal">
           <div class="content">
-            <AddWindow/>
+            <AddWindow :server="this.server"/>
           </div>
         </div>
 
         <div v-if="selectedArr[0]" class="container">
-          <Table :files="files" :filter="-1"></Table>
+          <Table :server="this.server" :files="files" :filter="-1"></Table>
         </div>
         <div v-if="selectedArr[1]" class="container">
-          <Table :files="files" :filter="0"></Table>
+          <Table :server="this.server" :files="files" :filter="0"></Table>
         </div>
         <div v-if="selectedArr[2]" class="container">
-          <Table :files="files" :filter="1"></Table>
+          <Table :server="this.server" :files="files" :filter="1"></Table>
         </div>
         <div v-if="selectedArr[3]" class="container">
-          <Table :files="files" :filter="2"></Table>
+          <Table :server="this.server" :files="files" :filter="2"></Table>
         </div>
 
 

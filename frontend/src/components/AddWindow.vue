@@ -8,6 +8,11 @@ export default {
       fileInfo: null
     }
   },
+  props: {
+    server: {
+      type: String
+    }
+  },
   methods: {
     send() {
       this.close();
@@ -26,7 +31,7 @@ export default {
         let formData = new FormData();
         formData.append('torrent', file);
 
-        axios.post('http://localhost:8081/api/info', formData, {
+        axios.post(this.server.concat('/api/info'), formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
@@ -53,7 +58,7 @@ export default {
         let formData = new FormData();
         formData.append('torrent', file);
 
-        axios.post('http://localhost:8081/api/start-upload', formData, {
+        axios.post(this.server.concat('/api/start-upload'), formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
