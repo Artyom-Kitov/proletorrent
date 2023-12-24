@@ -23,12 +23,12 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 @Slf4j
-@Builder
 public class TorrentConnection implements Runnable {
 
     private static final int PIPELINE_LENGTH = 5;
@@ -42,6 +42,10 @@ public class TorrentConnection implements Runnable {
     private final TorrentInfo meta;
     private final TorrentListListener listener;
     private final List<TrackerManager> managers;
+
+    @Getter
+    private final Instant createdAt;
+
     private TrackerManager aliveTracker;
     private byte[] infoHash;
 
@@ -55,6 +59,16 @@ public class TorrentConnection implements Runnable {
 
     @Getter
     private long bytesDownloaded;
+
+    @Builder
+    public TorrentConnection(String peerId, TorrentInfo meta, List<TrackerManager> managers,
+                             Instant createdAt, TorrentListListener listener) {
+        this.peerId = peerId;
+        this.meta = meta;
+        this.managers = managers;
+        this.createdAt = createdAt;
+        this.listener = listener;
+    }
 
     public String getName() {
         return meta.getName();
