@@ -56,7 +56,7 @@ export default {
       {{ this.formatBytes(file.size, 2) }}
     </td>
     <td>
-      {{file.progress}}%<progress class="progress" max="100" :value="file.progress"></progress>
+      {{Math.round(file.progress * 100) / 100}}%<progress class="progress" max="100" :value="file.progress"></progress>
     </td>
     <td>
       {{ $t('status.'.concat(file.status)) }}

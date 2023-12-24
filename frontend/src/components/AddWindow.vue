@@ -1,39 +1,92 @@
 <script>
+
+import axios from "axios";
 export default {
+  data() {
+    return {
+      isReady: false,
+      fileInfo: null
+    }
+  },
   methods: {
     send() {
       this.close();
+      this.uploadFile();
       location.href = "#";
-    },
-    checkAndParse() {
-      this.isReady = true;
     },
     close() {
       this.isReady = false;
-    }
+    },
 
-  },
-  data() {
-    return {
-      isReady: false
+    parseFile() {
+      let fileInput = document.getElementById('fileInput');
+      let file = fileInput.files[0];
+
+      if (file) {
+        let formData = new FormData();
+        formData.append('torrent', file);
+
+        axios.post('http://localhost:8081/api/info', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+            .then(response => {
+              this.fileInfo = response.data;
+              this.isReady = true;
+            })
+            .catch(response => {
+              this.fileInfo = 'server error: '.concat(response.data());
+              this.isReady = false;
+            });
+      } else {
+        this.fileInfo = "no file"
+        this.isReady = false;
+      }
+    },
+
+    uploadFile() {
+      let fileInput = document.getElementById('fileInput');
+      let file = fileInput.files[0];
+
+      if (file) {
+        let formData = new FormData();
+        formData.append('torrent', file);
+
+        axios.post('http://localhost:8081/api/start-upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+            .then(response => {
+              console.log(response.data);
+              this.close()
+            })
+            .catch(error => {
+              console.error(error);
+            });
+      } else {
+        console.log('No file selected');
+      }
     }
   }
 }
+
 </script>
 
 <template>
   <a href="#" class="box-close" @click="close()">×</a>
   <h2 class="modal_header">{{ $t('add-modal.title') }}</h2>
   <div class="file_space">
-    <input type="file" accept=".torrent">
-    <button class="file_button" @click="checkAndParse()"> {{ $t('add-modal.send-torrent') }} </button>
+    <input type="file" id="fileInput" accept=".torrent">
+    <button class="file_button" @click="parseFile()"> {{ $t('add-modal.send-torrent') }} </button>
   </div>
   <div>{{ $t('add-modal.file-preview') }}</div>
   <div class="file_preview">
-
+    {{fileInfo}}
   </div>
   <div class="start_container">
-    <button class="start_button" :disabled="!isReady" @click="send()"> {{$t('add-modal.start')}} </button>
+    <button class="start_button" :disabled="!this.isReady" @click="send()"> {{$t('add-modal.start')}} </button>
   </div>
 </template>
 
