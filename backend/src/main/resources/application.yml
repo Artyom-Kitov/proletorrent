@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 torrent:
   peer-id:
     prefix: -PR0001-
@@ -16,6 +16,7 @@ validation:
   torrent:
     invalid: invalid-torrent-file
     exists: torrent-already-exists
+    missing: no-such-torrent
   tracker:
     scheme: no-supported-scheme-provided
   unknown: internal-server-error

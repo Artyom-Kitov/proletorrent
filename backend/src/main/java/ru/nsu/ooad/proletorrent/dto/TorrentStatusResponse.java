@@ -8,10 +8,10 @@ import lombok.*;
 @NoArgsConstructor
 public class TorrentStatusResponse {
 
-    private int id;
+    private String id;
     private String name;
     private long size;
-    private int progress;
+    private double progress;
     private int status;
 
     @Getter

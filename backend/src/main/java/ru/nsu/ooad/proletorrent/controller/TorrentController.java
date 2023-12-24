@@ -3,6 +3,9 @@ package ru.nsu.ooad.proletorrent.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,9 +16,11 @@ import ru.nsu.ooad.proletorrent.dto.TorrentFileTreeNode;
 import ru.nsu.ooad.proletorrent.dto.TorrentStatusResponse;
 import ru.nsu.ooad.proletorrent.dto.UploadStatusResponse;
 import ru.nsu.ooad.proletorrent.exception.InvalidTorrentException;
+import ru.nsu.ooad.proletorrent.exception.NoSuchTorrentException;
 import ru.nsu.ooad.proletorrent.exception.TorrentException;
 import ru.nsu.ooad.proletorrent.service.TorrentService;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -55,6 +60,15 @@ public class TorrentController {
     @GetMapping("/statuses")
     public ResponseEntity<List<TorrentStatusResponse>> getStatuses() {
         return ResponseEntity.ok(torrentService.getStatuses());
+    }
+
+    @GetMapping("/download/{name}")
+    public ResponseEntity<Resource> download(@PathVariable String name) throws NoSuchTorrentException, IOException {
+        Resource resource = torrentService.download(name);
+        return ResponseEntity.ok()
+                .contentLength(resource.contentLength())
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(resource);
     }
 
 }

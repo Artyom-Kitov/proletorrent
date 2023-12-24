@@ -36,7 +36,9 @@ public class TorrentConnection implements Runnable {
     private static final String PSTR = (char) 0x13 + "BitTorrent protocol";
     private static final int HANDSHAKE_SIZE = PSTR.length() + 48;
 
+    @Getter
     private final String peerId;
+
     private final TorrentInfo meta;
     private final TorrentListListener listener;
     private final List<TrackerManager> managers;
@@ -85,10 +87,16 @@ public class TorrentConnection implements Runnable {
                 try {
                     writer.close();
                     selector.close();
-                } catch (IOException ignore) {
+                } catch (IOException ex) {
+                    log.error(ex.getMessage());
                 }
             }
         } finally {
+            try {
+                writer.close();
+            } catch (IOException e) {
+                log.error(e.getMessage());
+            }
             listener.remove(peerId);
         }
     }
@@ -145,13 +153,13 @@ public class TorrentConnection implements Runnable {
 
     private void handleKeys(Set<SelectionKey> keys) {
         if (lastPolledAt.plus(Duration.ofSeconds(pollInterval)).isBefore(Instant.now())) {
-            try {
-                List<Peer> newPeers = pollAliveTracker();
-                for (Peer peer : newPeers) {
+            List<Peer> newPeers = pollAliveTracker();
+            for (Peer peer : newPeers) {
+                try {
                     registerPeerKey(peer);
+                } catch (IOException e) {
+                    log.error("error registering new peer: " + e.getMessage());
                 }
-            } catch (IOException e) {
-                log.error("error registering new peer: " + e.getMessage());
             }
         }
         Iterator<SelectionKey> iterator = keys.iterator();
@@ -160,6 +168,7 @@ public class TorrentConnection implements Runnable {
             iterator.remove();
             try {
                 if (!key.isValid()) {
+                    closeKey(key);
                     continue;
                 }
                 if (key.isConnectable()) {
@@ -246,7 +255,7 @@ public class TorrentConnection implements Runnable {
         handleMessages(key, messages);
     }
 
-    private void handleMessages(SelectionKey key, List<? extends PeerMessage> messages) throws IOException {
+    private void handleMessages(SelectionKey key, List<PeerMessage> messages) throws IOException {
         PeerAttachment attachment = (PeerAttachment) key.attachment();
         for (PeerMessage message : messages) {
             switch (message.type()) {
@@ -276,7 +285,7 @@ public class TorrentConnection implements Runnable {
                     key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
                     if (pending.isComplete() && pending.isValidHash()) {
                         if (!pending.isValidHash()) {
-                            log.error("piece #" + pending.getIndex() + ": hashes don't match");
+                            log.error(meta.getName() + ": piece #" + pending.getIndex() + ": hashes don't match");
                             pieceQueue.remove();
                             pieceQueue.addPiece(pending.getIndex(), pending.getPeers());
                         } else {
@@ -286,17 +295,20 @@ public class TorrentConnection implements Runnable {
                             pieceQueue.remove();
                             if (bytesDownloaded == meta.getTotalSize() && pieceQueue.isDownloaded()) {
                                 log.info(meta.getName() + " successfully downloaded!");
-                                writer.close();
-                                Thread.currentThread().interrupt();
+                                stopUpload();
                             }
                         }
                     }
                 }
-                default -> {
-                    log.info(String.valueOf(message));
-                }
+                default -> log.info(String.valueOf(message));
             }
         }
+    }
+
+    private void stopUpload() throws IOException {
+        writer.close();
+        selector.close();
+        listener.onUpload(peerId, meta.getName(), writer.getTotalDownloaded(), writer.getFilePath());
     }
 
     private void sendMessage(SelectionKey key, PeerMessage message) throws IOException {

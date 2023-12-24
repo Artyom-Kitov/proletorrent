@@ -27,6 +27,9 @@ public class GlobalExceptionHandler {
     @Value("${validation.unknown}")
     private String INTERNAL_SERVER_ERROR;
 
+    @Value("${validation.torrent.missing}")
+    private String NO_SUCH_TORRENT;
+
     @ExceptionHandler(TorrentExistsException.class)
     public ResponseEntity<MessageResponse> torrentExistsException(TorrentExistsException e) {
         log.error(e.getMessage());
@@ -46,6 +49,13 @@ public class GlobalExceptionHandler {
         log.error(e.getMessage());
         return ResponseEntity.badRequest()
                 .body(new MessageResponse(NO_SUPPORTED_SCHEME_PROVIDED));
+    }
+
+    @ExceptionHandler(NoSuchTorrentException.class)
+    public ResponseEntity<MessageResponse> noSuchTorrentException(NoSuchTorrentException e) {
+        log.error(e.getMessage());
+        return ResponseEntity.badRequest()
+                .body(new MessageResponse(NO_SUCH_TORRENT));
     }
 
     @ExceptionHandler(Throwable.class)

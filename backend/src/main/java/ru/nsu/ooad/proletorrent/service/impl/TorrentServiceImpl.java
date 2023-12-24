@@ -3,14 +3,18 @@ package ru.nsu.ooad.proletorrent.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentFile;
 import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentInfo;
 import ru.nsu.ooad.proletorrent.dto.TorrentFileTreeNode;
 import ru.nsu.ooad.proletorrent.dto.TorrentStatusResponse;
 import ru.nsu.ooad.proletorrent.exception.InvalidTorrentException;
+import ru.nsu.ooad.proletorrent.exception.NoSuchTorrentException;
 import ru.nsu.ooad.proletorrent.exception.TorrentException;
-import ru.nsu.ooad.proletorrent.exception.TrackerException;
+import ru.nsu.ooad.proletorrent.exception.TorrentExistsException;
 import ru.nsu.ooad.proletorrent.repository.TorrentRepository;
 import ru.nsu.ooad.proletorrent.repository.document.DownloadedTorrent;
 import ru.nsu.ooad.proletorrent.service.TorrentListListener;
@@ -19,6 +23,9 @@ import ru.nsu.ooad.proletorrent.torrent.TorrentConnection;
 import ru.nsu.ooad.proletorrent.torrent.tracker.TrackerManager;
 import ru.nsu.ooad.proletorrent.torrent.tracker.TrackerManagerFactory;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,6 +33,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @RequiredArgsConstructor
 public class TorrentServiceImpl implements TorrentService, TorrentListListener {
+
+    private static final Random RANDOM = new Random();
 
     @Value("${torrent.peer-id.prefix}")
     private String peerIdPrefix;
@@ -41,31 +50,28 @@ public class TorrentServiceImpl implements TorrentService, TorrentListListener {
     public List<TorrentStatusResponse> getStatuses() {
         List<TorrentStatusResponse> result = new ArrayList<>();
         Enumeration<TorrentConnection> pending = connections.elements();
-        int counter = 0;
-        for (Iterator<TorrentConnection> it = pending.asIterator(); it.hasNext(); counter++) {
+        for (Iterator<TorrentConnection> it = pending.asIterator(); it.hasNext(); ) {
             TorrentConnection connection = it.next();
             result.add(TorrentStatusResponse.builder()
-                    .id(counter)
+                    .id(connection.getPeerId())
                     .name(connection.getName())
                     .size(connection.getSize())
-                    .progress((int) (100.0 * connection.getBytesDownloaded() / connection.getSize()))
+                    .progress(100.0 * connection.getBytesDownloaded() / connection.getSize())
                     .status(TorrentStatusResponse.Status.DOWNLOADING.getValue())
                     .build());
         }
         List<DownloadedTorrent> downloaded = torrentRepository.findAll();
         for (DownloadedTorrent t : downloaded) {
             result.add(TorrentStatusResponse.builder()
-                    .id(counter)
+                    .id(t.getId())
                     .name(t.getName())
                     .size(t.getSize())
                     .progress(100)
                     .status(TorrentStatusResponse.Status.SHARING.getValue())
                     .build());
-            counter++;
         }
         return result;
     }
-
     @Override
     public TorrentFileTreeNode getTorrentFileStructure(TorrentInfo torrent) {
         if (torrent.isSingleFileTorrent()) {
@@ -90,6 +96,15 @@ public class TorrentServiceImpl implements TorrentService, TorrentListListener {
 
     @Override
     public void startUpload(TorrentInfo metaInfo) throws TorrentException {
+        if (torrentRepository.existsByName(metaInfo.getName())) {
+            throw new TorrentExistsException("torrent is already downloaded");
+        }
+        for (Iterator<TorrentConnection> it = connections.elements().asIterator(); it.hasNext(); ) {
+            TorrentConnection connection = it.next();
+            if (connection.getName().equals(metaInfo.getName())) {
+                throw new TorrentExistsException("torrent is already being downloaded");
+            }
+        }
         if (!metaInfo.isSingleFileTorrent()) {
             metaInfo.setTotalSize(metaInfo.getFileList().stream()
                     .map(TorrentFile::getFileSize)
@@ -110,11 +125,19 @@ public class TorrentServiceImpl implements TorrentService, TorrentListListener {
         new Thread(connection).start();
     }
 
+    @Override
+    public Resource download(String name) throws NoSuchTorrentException, FileNotFoundException {
+        DownloadedTorrent torrent = torrentRepository.findByName(name)
+                .orElseThrow(() -> new NoSuchTorrentException("no such downloaded torrent"));
+        Path path = Path.of(torrent.getFullPath());
+        return new FileSystemResource(path.toFile());
+    }
+
     private String generatePeerId() {
         String charSet = "0123456789abcdef";
         StringBuilder peerId = new StringBuilder(peerIdPrefix);
         for (int i = 0; i < suffixLength; i++) {
-            peerId.append(charSet.charAt(new Random().nextInt(charSet.length())));
+            peerId.append(charSet.charAt(RANDOM.nextInt(charSet.length())));
         }
         return peerId.toString();
     }
@@ -122,6 +145,16 @@ public class TorrentServiceImpl implements TorrentService, TorrentListListener {
     @Override
     public void remove(String key) {
         connections.remove(key);
+    }
+
+    @Override
+    public void onUpload(String key, String name, long size, Path fullPath) {
+        torrentRepository.save(DownloadedTorrent.builder()
+                        .id(key)
+                        .name(name)
+                        .size(size)
+                        .fullPath(fullPath.toString())
+                .build());
     }
 
 }

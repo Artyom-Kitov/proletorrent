@@ -1,0 +1,10 @@
+
+m
+java:S2095i"KUse try-with-resources or close this "SocketChannel" in a "finally" clause.(‹È‰üÿÿÿÿ8øÄ×ÓÉ1
+L
+java:S2093G"*Change this "try" to a try-with-resources.(¡»¢üùÿÿÿÿ8ÆÅ×ÓÉ1
+p
+java:S3776š"RRefactor this method to reduce its Cognitive Complexity from 19 to the 15 allowed.(œÅÓø8êÅ×ÓÉ1
+u
+java:S3776‚"RRefactor this method to reduce its Cognitive Complexity from 21 to the 15 allowed.( ±è­üÿÿÿÿ8”Æ×ÓÉ1
+K	java:S108")Either remove or fill this block of code.(à‹Î²ûÿÿÿÿ8›Æ×ÓÉ1

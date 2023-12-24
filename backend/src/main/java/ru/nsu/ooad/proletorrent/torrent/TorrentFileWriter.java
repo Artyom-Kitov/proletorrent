@@ -1,5 +1,7 @@
 package ru.nsu.ooad.proletorrent.torrent;
 
+import lombok.Getter;
+
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
@@ -10,8 +12,15 @@ public class TorrentFileWriter implements AutoCloseable {
     private static final Path DOWNLOAD_PATH = Path.of("uploads");
 
     private final String name;
+
+    @Getter
+    private Path filePath;
+
     private final int pieceSize;
-    private RandomAccessFile destination;
+    private final RandomAccessFile destination;
+
+    @Getter
+    private int totalDownloaded = 0;
 
     public TorrentFileWriter(String name, int pieceSize) throws IOException {
         this.name = name;
@@ -22,22 +31,24 @@ public class TorrentFileWriter implements AutoCloseable {
     }
 
     public void resolveDownloadFile() throws IOException {
-        Path filePath = DOWNLOAD_PATH.resolve(Path.of(name));
+        Path torrentPath = DOWNLOAD_PATH.resolve(Path.of(name));
         if (!Files.exists(DOWNLOAD_PATH)) {
             Files.createDirectory(DOWNLOAD_PATH);
         } else if (!Files.isDirectory(DOWNLOAD_PATH)) {
             Files.delete(DOWNLOAD_PATH);
             Files.createDirectory(DOWNLOAD_PATH);
         }
-        if (Files.exists(filePath)) {
-            Files.delete(filePath);
+        if (Files.exists(torrentPath)) {
+            Files.delete(torrentPath);
         }
-        Files.createFile(filePath);
+        Files.createFile(torrentPath);
+        filePath = torrentPath.toAbsolutePath();
     }
 
     public void write(byte[] data, int pieceIndex) throws IOException {
         destination.seek((long) pieceIndex * pieceSize);
         destination.write(data);
+        totalDownloaded += data.length;
     }
 
     @Override

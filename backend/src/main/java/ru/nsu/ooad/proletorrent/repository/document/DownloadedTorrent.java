@@ -17,6 +17,6 @@ public class DownloadedTorrent {
 
     private long size;
 
-    private String parentFolder;
+    private String fullPath;
 
 }
