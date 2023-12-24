@@ -52,6 +52,7 @@
         axios.get('http://localhost:8081/api/statuses')
             .then(response => {
               this.files = response.data;
+              //console.log(response.data);
             })
             .catch(error => {
               console.error(error);

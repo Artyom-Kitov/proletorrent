@@ -1,13 +1,13 @@
 <script>
+import axios from "axios";
+
 export default {
   props: {
     files: {
       type: Array,
-      //required: true
     },
     filter: {
       type: Number,
-      //required: true
     }
   },
   methods: {
@@ -21,6 +21,34 @@ export default {
       const i = Math.floor(Math.log(bytes) / Math.log(k))
 
       return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+    },
+    downloadFile(file) {
+      console.log('start to download')
+      axios.get('http://localhost:8081/api/download/'.concat(file.name))
+          .then(response => {
+            // Создаем Blob из массива байт в ответе
+            const blob = new Blob([response.data], { type: response.headers['content-type'] });
+
+            // Создаем URL для Blob
+            const blobUrl = URL.createObjectURL(blob);
+
+            // Создаем ссылку для скачивания
+            const a = document.createElement('a');
+            a.href = blobUrl;
+
+            // Устанавливаем имя файла для сохранения
+            a.download = file.name;
+
+            // Добавляем ссылку в документ и эмулируем клик для начала скачивания
+            document.body.appendChild(a);
+            a.click();
+
+            // Очищаем URL объекта Blob после скачивания
+            URL.revokeObjectURL(blobUrl);
+          })
+          .catch(error => {
+            console.error(error);
+          });
     }
   }
 }
@@ -51,6 +79,7 @@ export default {
     </td>
     <td class="name_cell">
       {{ file.name }}
+      <button @click="downloadFile(file)">d</button>
     </td>
     <td>
       {{ this.formatBytes(file.size, 2) }}
