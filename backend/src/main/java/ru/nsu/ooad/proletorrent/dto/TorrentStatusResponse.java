@@ -2,6 +2,8 @@ package ru.nsu.ooad.proletorrent.dto;
 
 import lombok.*;
 
+import java.time.Instant;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -9,10 +11,16 @@ import lombok.*;
 public class TorrentStatusResponse {
 
     private String id;
+
     private String name;
+
     private long size;
+
     private double progress;
+
     private int status;
+
+    private Instant createdAt;
 
     @Getter
     @RequiredArgsConstructor

@@ -8,7 +8,7 @@ torrent:
 spring:
   data:
     mongodb:
-      uri: mongodb://back:back@localhost:27017/db?authSource=admin
+      uri: mongodb://back:back@30.0.0.3:27017/db?authSource=admin
       authentication-database: admin
       database: db
 

@@ -19,6 +19,6 @@ public interface TorrentService {
 
     void startUpload(TorrentInfo metaInfo) throws TorrentException;
 
-    Resource download(String name) throws NoSuchTorrentException, FileNotFoundException;
+    Resource download(String name) throws NoSuchTorrentException;
 
 }

@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import ru.nsu.ooad.proletorrent.bencode.torrent.TorrentFile;
@@ -23,9 +22,8 @@ import ru.nsu.ooad.proletorrent.torrent.TorrentConnection;
 import ru.nsu.ooad.proletorrent.torrent.tracker.TrackerManager;
 import ru.nsu.ooad.proletorrent.torrent.tracker.TrackerManagerFactory;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -57,6 +55,7 @@ public class TorrentServiceImpl implements TorrentService, TorrentListListener {
                     .name(connection.getName())
                     .size(connection.getSize())
                     .progress(100.0 * connection.getBytesDownloaded() / connection.getSize())
+                    .createdAt(connection.getCreatedAt())
                     .status(TorrentStatusResponse.Status.DOWNLOADING.getValue())
                     .build());
         }
@@ -67,6 +66,7 @@ public class TorrentServiceImpl implements TorrentService, TorrentListListener {
                     .name(t.getName())
                     .size(t.getSize())
                     .progress(100)
+                    .createdAt(t.getCreatedAt())
                     .status(TorrentStatusResponse.Status.SHARING.getValue())
                     .build());
         }
@@ -119,6 +119,7 @@ public class TorrentServiceImpl implements TorrentService, TorrentListListener {
                 .peerId(peerId)
                 .meta(metaInfo)
                 .managers(managers)
+                .createdAt(Instant.now())
                 .listener(this)
                 .build();
         connections.put(peerId, connection);
@@ -126,7 +127,7 @@ public class TorrentServiceImpl implements TorrentService, TorrentListListener {
     }
 
     @Override
-    public Resource download(String name) throws NoSuchTorrentException, FileNotFoundException {
+    public Resource download(String name) throws NoSuchTorrentException {
         DownloadedTorrent torrent = torrentRepository.findByName(name)
                 .orElseThrow(() -> new NoSuchTorrentException("no such downloaded torrent"));
         Path path = Path.of(torrent.getFullPath());
@@ -148,11 +149,12 @@ public class TorrentServiceImpl implements TorrentService, TorrentListListener {
     }
 
     @Override
-    public void onUpload(String key, String name, long size, Path fullPath) {
+    public void onUpload(String key, String name, long size, Path fullPath, Instant createdAt) {
         torrentRepository.save(DownloadedTorrent.builder()
                         .id(key)
                         .name(name)
                         .size(size)
+                        .createdAt(createdAt)
                         .fullPath(fullPath.toString())
                 .build());
     }

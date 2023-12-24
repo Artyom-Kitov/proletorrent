@@ -7,7 +7,7 @@ services:
       context: backend/.
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "8081:8081"
     depends_on:
       - proletorrent-db
     networks:
@@ -20,6 +20,10 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=back
       - MONGO_INITDB_ROOT_PASSWORD=back
+      - MONGO_INITDB_DATABASE=db
+      - MONGODB_DB=db
+      - MONGODB_USER=back
+      - MONGODB_PASSWORD=back
     ports:
       - "27017:27017"
     networks:
