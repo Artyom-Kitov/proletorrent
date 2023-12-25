@@ -1,11 +1,12 @@
 <script>
 
 import axios from "axios";
+
 export default {
   data() {
     return {
       isReady: false,
-      fileInfo: null
+      fileInfo: ''
     }
   },
   props: {
@@ -73,6 +74,28 @@ export default {
       } else {
         console.log('No file selected');
       }
+    },
+
+    formatBytes(bytes, decimals) {
+      if (!+bytes) return '0 Bytes'
+
+      const k = 1024
+      const dm = decimals < 0 ? 0 : decimals
+      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+
+      const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+      return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+    },
+
+    parseNode(key, value) {
+      switch (key) {
+        case "name":
+          return value;
+        case "size":
+          return this.formatBytes(value, 2);
+        case "children": return value;
+      }
     }
   }
 }
@@ -88,7 +111,14 @@ export default {
   </div>
   <div>{{ $t('add-modal.file-preview') }}</div>
   <div class="file_preview">
-    {{fileInfo}}
+    <pre>{{
+        JSON.stringify(fileInfo, (key, value) => {
+        if (key === "size") return formatBytes(value, 2);
+        else if (key === "children" && value.length === 0) return undefined;
+        else return value;
+        }, 2)
+      }}
+    </pre>
   </div>
   <div class="start_container">
     <button class="start_button" :disabled="!this.isReady" @click="send()"> {{$t('add-modal.start')}} </button>
@@ -142,6 +172,9 @@ export default {
 
 .file_preview {
   height: 50vh;
+  text-align: left;
+  padding-left: 10px;
+  overflow: auto;
 }
 
 .file_preview, .file_space {

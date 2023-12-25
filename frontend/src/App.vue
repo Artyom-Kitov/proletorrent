@@ -109,9 +109,13 @@
           <div class="content">
             <img class="star" src="../imgs/star.png" alt="star">
             <h2 class="modal_title">☆{{ $t('git-modal.message') }}☆</h2>
-            <a class="git_link" href="https://github.com/Artyom-Kitov/proletorrent" target="_blank">
-              {{ $t('git-modal.git-link') }}
-            </a>
+            {{ $t('git-modal.git-link') }}:
+            <div class="links">
+              <a class="git_link" href="https://github.com/Artyom-Kitov/proletorrent" target="_blank">
+                {{ $t('git-modal.comrade') }} 1</a>
+              <a class="git_link" href="https://github.com/evgen-resuser/Proletorrent" target="_blank">
+                {{ $t('git-modal.comrade') }} 2</a>
+            </div>
             <a href="#" class="box-close">×</a>
           </div>
         </div>

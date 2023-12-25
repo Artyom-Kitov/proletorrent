@@ -10,7 +10,8 @@
   "settings-button": "настройки",
   "git-modal": {
     "message": "Оцените труд работяг звездой на Github!",
-    "git-link": "Посетить наши репозитории"
+    "git-link": "Посетить наши репозитории",
+    "comrade": "Товарищ"
   },
   "settings-modal": {
     "settings-title": "Параметры",

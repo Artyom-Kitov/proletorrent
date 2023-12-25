@@ -127,13 +127,21 @@ progress {
   .th {
     border: 1px solid;
   }
+
+  .download_file {
+    border: #ffbf1c solid 2px;
+    color: #ffbf1c;
+  }
+
+  progress {
+    accent-color: #ffbf1c;
+  }
 }
 
 .download_file {
   border-radius: 10px;
   border: #960000 solid 2px;
   color: #960000;
-  font-weight: bold;
   width: 30px;
   text-decoration: none;
 }

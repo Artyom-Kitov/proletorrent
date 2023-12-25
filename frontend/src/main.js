@@ -13,13 +13,5 @@ const i18n = createI18n({
     messages
 })
 
-// createApp(App,
-//     {
-//         setup() {
-//             const {t} = useI18n();
-//             return {t}
-//         }
-//     }
-// ).use(i18n).mount('#app')
 createApp(App).use(i18n).mount('#app')
 
